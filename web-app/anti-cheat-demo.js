@@ -48,42 +48,10 @@ class AntiCheatIntegration {
             this.detectContextMenu();
         });
 
-        // Детектирование копирования
-        document.addEventListener('copy', (e) => {
-            console.log('🛡️ copy event');
-            this.detectCopyAction();
-        });
-
-        // Детектирование вставки
-        document.addEventListener('paste', (e) => {
-            console.log('🛡️ paste event');
-            this.detectPasteAction(e);
-        });
-
         // Детектирование нажатий клавиш
         document.addEventListener('keydown', (e) => {
             this.detectSuspiciousShortcuts(e);
         });
-
-        // Мониторинг DevTools
-        this.setupDevToolsDetection();
-
-        console.log('🛡️ AntiCheatSystem: Все слушатели установлены');
-    }
-
-    setupDevToolsDetection() {
-        console.log('🛡️ AntiCheatSystem: Настройка детектирования DevTools');
-        let devToolsCheck = setInterval(() => {
-            const widthThreshold = window.outerWidth - window.innerWidth > 160;
-            const heightThreshold = window.outerHeight - window.innerHeight > 160;
-
-            if ((widthThreshold || heightThreshold) && !this.cheatDetection.devToolsOpened) {
-                console.log('🛡️ DevTools обнаружены!');
-                this.cheatDetection.devToolsOpened = true;
-                this.detectDevTools();
-            }
-        }, 1000);
-    }
 
     startMonitoring() {
         this.isMonitoring = true;
@@ -159,101 +127,6 @@ class AntiCheatIntegration {
             'low'
         );
     }
-
-    detectCopyAction() {
-        console.log('🛡️ detectCopyAction вызван');
-        this.cheatDetection.clipboardUsage++;
-        this.logSecurityEvent(
-            'clipboard',
-            '🔍 Обнаружено копирование кода',
-            'medium'
-        );
-    }
-
-    detectPasteAction(event) {
-        console.log('🛡️ detectPasteAction вызван');
-        const currentTime = Date.now();
-
-        // Проверка быстрых вставок
-        if (currentTime - this.lastPasteTime < 2000) {
-            this.cheatDetection.rapidActions++;
-            this.logSecurityEvent(
-                'rapid_paste',
-                '⚡ Обнаружены множественные вставки кода',
-                'high'
-            );
-            this.takeScreenshot();
-        }
-
-        this.lastPasteTime = currentTime;
-
-        // Анализ вставленного контента
-        try {
-            const pastedText = event.clipboardData?.getData('text') || '';
-            this.analyzePastedContent(pastedText);
-        } catch (error) {
-            console.log('🛡️ Ошибка при анализе вставки:', error);
-        }
-    }
-
-    detectLargePasteByLines(pastedText) {
-        // Проверяем вставку больше 20 строк
-        const lines = pastedText.split('\n');
-        const nonEmptyLines = lines.filter(line => line.trim().length > 0);
-
-        if (nonEmptyLines.length > 20) {
-            this.logSecurityEvent(
-                'large_line_paste',
-                '📄 Обнаружена вставка большого количества строк кода',
-                'high',
-                `Вставлено ${nonEmptyLines.length} строк`
-            );
-            this.takeScreenshot();
-            return true;
-        }
-        return false;
-    }
-
-
-
-    analyzePastedContent(text) {
-        // Проверка на количество строк (более 20)
-        this.detectLargePasteByLines(text);
-
-        if (text.length > 150) {
-            this.logSecurityEvent(
-                'large_paste',
-                '📋 Обнаружена вставка большого объема кода',
-                'medium',
-                `Длина вставки: ${text.length} символов`
-            );
-            this.takeScreenshot();
-        }
-
-        // Проверка на подозрительные паттерны
-        const plagiarismPatterns = [
-            { pattern: /class.*extends/, message: 'Наследование классов' },
-            { pattern: /import.*from/, message: 'Импорты модулей' },
-            { pattern: /require\(/, message: 'CommonJS require' },
-            { pattern: /\/\/\s*https?:\/\//, message: 'Ссылки в комментариях' },
-            { pattern: /\/\/\s*Источник:/, message: 'Пометка об источнике' },
-            { pattern: /\/\/\s*Copied from/, message: 'Пометка о копировании' }
-        ];
-
-        plagiarismPatterns.forEach(({ pattern, message }) => {
-            if (pattern.test(text)) {
-                this.cheatDetection.suspiciousPatterns++;
-                this.logSecurityEvent(
-                    'plagiarism_marker',
-                    `🚫 Обнаружен подозрительный паттерн: ${message}`,
-                    'high'
-                );
-                this.takeScreenshot();
-            }
-        });
-    }
-
-    
 
     detectSuspiciousShortcuts(event) {
         const suspiciousCombinations = [
