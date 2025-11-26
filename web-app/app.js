@@ -33,7 +33,32 @@ require(['vs/editor/editor.main'], function () {
 });
 
 document.getElementById('welcome-time').textContent = new Date().toLocaleTimeString();
+
+// Инициализация системы античита
+function initAntiCheatSystem() {
+    if (!window.antiCheatSystem) {
+        window.antiCheatSystem = new AntiCheatIntegration();
+    }
+}
+
+// Получение отчета безопасности
+function getSecurityReport() {
+    if (window.antiCheatSystem) {
+        return window.antiCheatSystem.getSecurityReport();
+    }
+    return null;
+}
+
+// Принудительный скриншот (для тестирования)
+function takeSecurityScreenshot() {
+    if (window.antiCheatSystem) {
+        return window.antiCheatSystem.takeScreenshot();
+    }
+    return null;
+}
+
 async function startInterview(level) {
+    initAntiCheatSystem();
     interviewState.currentLevel = level;
     interviewState.stage = 'interview';
     interviewState.metrics.startTime = Date.now();
@@ -545,25 +570,6 @@ function determineNextLevel(evaluation) {
     return 'Junior-';
 }
 
-// Демонстрация античита
-async function showAntiCheatDemo() {
-    addChatMessage('assistant', '🔒 Демонстрация системы защиты от читерства:');
-    
-    const demoMessages = [
-        '🔍 Обнаружено копирование кода из буфера обмена',
-        '⚠️ Обнаружено открытие DevTools',
-        '📑 Обнаружено переключение вкладок',
-        '⏸️ Обнаружен период бездействия',
-        '⚡ Обнаружены множественные вставки кода'
-    ];
-
-    for (const msg of demoMessages) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        addChatMessage('system', `[Система защиты] ${msg}`);
-    }
-
-    addChatMessage('assistant', 'Система защиты отслеживает различные подозрительные действия для обеспечения честности интервью.');
-}
 
 // Финальный диалог
 async function startFinalDialogue() {
