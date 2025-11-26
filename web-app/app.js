@@ -58,6 +58,8 @@ function takeSecurityScreenshot() {
 }
 
 async function startInterview(level) {
+    const headerElement = document.getElementById('header_active');
+    headerElement.style.display = 'flex';
     initAntiCheatSystem();
     interviewState.currentLevel = level;
     interviewState.stage = 'interview';
