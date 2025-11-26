@@ -52,6 +52,7 @@ class AntiCheatIntegration {
         document.addEventListener('keydown', (e) => {
             this.detectSuspiciousShortcuts(e);
         });
+    }  
 
     startMonitoring() {
         this.isMonitoring = true;
