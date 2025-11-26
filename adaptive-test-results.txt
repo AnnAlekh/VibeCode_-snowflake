@@ -1,0 +1,166 @@
+=== Тест адаптивной системы подбора задач ===
+
+LLM Client initialized with provider: qwen
+Models: {
+  taskGeneration: 'qwen3-32b-awq',
+  taskStreaming: 'qwen3-32b-awq',
+  codeAnalysis: 'qwen3-32b-awq',
+  chat: 'qwen3-32b-awq',
+  report: 'qwen3-32b-awq'
+}
+API Base URL: https://llm.t1v.scibox.tech/v1
+LLM Client initialized with provider: qwen
+Models: {
+  taskGeneration: 'qwen3-32b-awq',
+  taskStreaming: 'qwen3-32b-awq',
+  codeAnalysis: 'qwen3-32b-awq',
+  chat: 'qwen3-32b-awq',
+  report: 'qwen3-32b-awq'
+}
+API Base URL: https://llm.t1v.scibox.tech/v1
+LLM Client initialized with provider: qwen
+Models: {
+  taskGeneration: 'qwen3-32b-awq',
+  taskStreaming: 'qwen3-32b-awq',
+  codeAnalysis: 'qwen3-32b-awq',
+  chat: 'qwen3-32b-awq',
+  report: 'qwen3-32b-awq'
+}
+API Base URL: https://llm.t1v.scibox.tech/v1
+LLM Client initialized with provider: qwen
+Models: {
+  taskGeneration: 'qwen3-32b-awq',
+  taskStreaming: 'qwen3-32b-awq',
+  codeAnalysis: 'qwen3-32b-awq',
+  chat: 'qwen3-32b-awq',
+  report: 'qwen3-32b-awq'
+}
+API Base URL: https://llm.t1v.scibox.tech/v1
+LLM Client initialized with provider: qwen
+Models: {
+  taskGeneration: 'qwen3-32b-awq',
+  taskStreaming: 'qwen3-32b-awq',
+  codeAnalysis: 'qwen3-32b-awq',
+  chat: 'qwen3-32b-awq',
+  report: 'qwen3-32b-awq'
+}
+API Base URL: https://llm.t1v.scibox.tech/v1
+📋 ЭТАП 1: Генерация первой задачи (Junior уровень)
+
+Generating Junior-level task for arrays in python...
+Task generated successfully: task_1764133357405_z6wou15o4
+✅ Задача сгенерирована:
+ID: task_1764133357405_z6wou15o4
+Описание: Дан массив целых чисел. Найдите максимальную разницу между любыми двумя элементами в массиве, где пе...
+
+
+📊 ЭТАП 2: Определение уровня кандидата
+
+
+📊 Определение уровня кандидата на основе первой задачи...
+Задача: Junior уровень, arrays
+Время решения: 45000ms
+Попыток: 1
+✅ Уровень определен: Junior
+Уверенность: 90%
+
+✅ Уровень определен: Junior
+Уверенность: 90%
+Правильность: 0/100
+Оптимальность: 0/100
+Качество кода: 60/100
+
+🔍 Анализ решения для задачи: task_1764133357405_z6wou15o4
+Попыток: 1
+✅ Анализ завершен. Общая оценка: 0/100
+
+
+🎯 ЭТАП 3: Адаптивный подбор второй задачи
+
+
+🎯 Адаптивный подбор следующей задачи...
+Текущий уровень: Junior
+Выполнено задач: 1
+Производительность: {"overallScore":0,"avgTimeSpent":45000,"avgAttempts":1,"trend":"stable"}
+LLM предложение недоступно, используем алгоритмическое решение
+
+📋 Параметры следующей задачи:
+- Уровень: Junior-
+- Тема: strings
+- Язык: python
+Generating Junior--level task with streaming...
+{"id":"string_operations_advanced","title":"String Manipulation: Advanced Operations","description":"You are given a string s. Your task is to write a function called process_string(s) that performs the following operations:\n\n1. Capitalize the first letter of each word in the string.\n2. Remove all digits from the string.\n3. Replace any sequence of two or more spaces with a single space.\n4. Trim the string (i.e., remove any leading or trailing spaces).\n\nFor example, if the input is '  hello  123 world  ', the output should be 'Hello World'.\n\nWrite the function process_string(s) to implement these operations.","difficulty":"Junior-","topic":"String Manipulation","example":"Input: '  hello  123 world  ', Output: 'Hello World'","starterCode":"def process_string(s):\n    # Your code here\n    return processed_string","testCases":["'  hello  123 world  '","'This is 123 a test   '","'   9876 all  digits  here 2023'","'   multiple   spaces   here   '","'Already Clean String 123'"],"solution":"def process_string(s):\n    # Capitalize first letter of each word\n    s = s.title()\n    # Remove digits\n    s = ''.join(ch for ch in s if not ch.isdigit())\n    # Replace multiple spaces with a single space\n    s = ' '.join(s.split())\n    return s","explanation":"The solution uses Python's string methods to perform the required operations. First, the title() method capitalizes the first letter of each word. Then, a generator expression is used to remove all digits by checking if a character is a digit. Finally, the split() and ' '.join() methods are used together to replace any sequence of whitespace with a single space and trim leading/trailing spaces."}Streaming task generated successfully: task_1764133389293_vt3t8f5ff
+
+✅ Задача адаптивно подобрана и сгенерирована
+ID: task_1764133389293_vt3t8f5ff
+
+✅ Вторая задача подобрана:
+ID: task_1764133389293_vt3t8f5ff
+Уровень: Junior-
+Тема: strings
+Адаптация: decrease_difficulty
+Объяснение: Уменьшена сложность с Junior до Junior- для лучшего соответствия текущему уровню кандидата.
+
+🔍 Анализ решения для задачи: task_1764133389293_vt3t8f5ff
+Попыток: 2
+✅ Анализ завершен. Общая оценка: 0/100
+
+
+📊 ЭТАП 4: Обновление уровня на основе прогресса
+
+
+📊 Обновление оценки уровня...
+Текущий уровень: Junior
+Выполнено задач: 2
+Предыдущий уровень: Junior
+Новый уровень: Junior-
+Изменение: down
+Тренд: stable
+Уверенность: 70%
+
+
+🎯 ЭТАП 5: Адаптивный подбор третьей задачи
+
+
+🎯 Адаптивный подбор следующей задачи...
+Текущий уровень: Junior-
+Выполнено задач: 2
+Производительность: {"overallScore":0,"avgTimeSpent":82500,"avgAttempts":1.5,"trend":"stable"}
+LLM предложение недоступно, используем алгоритмическое решение
+
+📋 Параметры следующей задачи:
+- Уровень: Junior-
+- Тема: algorithms
+- Язык: python
+Generating Junior--level task with streaming...
+{"task": {"id": "junior-arrays-002", "title": "Find the First Duplicate in an Array", "description": "Given an array of integers, find the first element that occurs more than once. Return the value of this element. If there are no duplicates, return -1.", "input": "An array of integers.", "output": "The first duplicate element, or -1 if there is none.", "examples": [{"input": [2, 1, 3, 5, 3, 2], "output": 3}, {"input": [1, 2, 3, 4], "output": -1}, {"input": [5, 5, 5], "output": 5}], "constraints": "The array will contain between 1 and 1000 elements. Values will be between -1000 and 1000."}, "hints": ["Consider using a set to track elements you've already seen.", "Iterate through the array and check if an element is in the set."], "difficulty": "easy", "tags": ["arrays", "hashing"], "starterCode": "def first_duplicate(arr):\n    # Your code here"}Streaming task generated successfully: task_1764133411058_w7j9q1vqb
+
+✅ Задача адаптивно подобрана и сгенерирована
+ID: task_1764133411058_w7j9q1vqb
+
+✅ Третья задача подобрана:
+ID: task_1764133411058_w7j9q1vqb
+Уровень: Junior-
+Тема: algorithms
+Адаптация: decrease_difficulty
+Объяснение: Уменьшена сложность с Junior- до Junior- для лучшего соответствия текущему уровню кандидата.
+
+
+============================================================
+📈 ИТОГОВАЯ СТАТИСТИКА
+============================================================
+
+Начальный уровень: Junior
+Финальный уровень: Junior-
+Выполнено задач: 2
+
+Средняя оценка: 0.0/100
+Среднее время решения: 82.5 секунд
+Среднее количество попыток: 1.5
+
+История задач:
+  1. Junior - arrays (0/100)
+  2. Junior- - strings (0/100)
+
+✅ Тестирование адаптивной системы завершено!
+

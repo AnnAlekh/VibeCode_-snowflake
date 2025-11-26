@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interviewer Platform</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: #2d2d30;
+            padding: 15px 20px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .metrics-bar {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+        }
+
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .metric-value {
+            color: #4ec9b0;
+            font-weight: 600;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .left-panel {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #3e3e42;
+        }
+
+        .right-panel {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background: #252526;
+            padding: 10px 15px;
+            border-bottom: 1px solid #3e3e42;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .task-view {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #1e1e1e;
+        }
+
+        .task-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #4ec9b0;
+        }
+
+        .task-description {
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .task-examples {
+            margin: 20px 0;
+        }
+
+        .example {
+            background: #252526;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 3px solid #4ec9b0;
+        }
+
+        .example-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #4ec9b0;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+
+        .ide-container {
+            flex: 1;
+            position: relative;
+            background: #1e1e1e;
+        }
+
+        #monaco-editor {
+            width: 100%;
+            height: 100%;
+        }
+
+        .ide-toolbar {
+            background: #252526;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3e3e42;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #0e639c;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1177bb;
+        }
+
+        .btn-success {
+            background: #0e7c0e;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #0f8f0f;
+        }
+
+        .test-results {
+            background: #252526;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+
+        .test-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid #3e3e42;
+        }
+
+        .test-item:last-child {
+            border-bottom: none;
+        }
+
+        .test-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .test-icon.passed {
+            background: #0e7c0e;
+            color: white;
+        }
+
+        .test-icon.failed {
+            background: #a1260d;
+            color: white;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message.assistant {
+            align-items: flex-start;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-bubble {
+            background: #0e639c;
+            color: white;
+        }
+
+        .message.assistant .message-bubble {
+            background: #252526;
+            color: #d4d4d4;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #858585;
+            margin-top: 5px;
+        }
+
+        .chat-input-container {
+            padding: 15px;
+            border-top: 1px solid #3e3e42;
+            background: #252526;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px;
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            color: #d4d4d4;
+            font-size: 14px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #0e639c;
+        }
+
+        .level-selector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #1e1e1e;
+        }
+
+        .level-selector h1 {
+            font-size: 32px;
+            margin-bottom: 40px;
+            color: #4ec9b0;
+        }
+
+        .level-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .level-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: #252526;
+            border: 2px solid #3e3e42;
+            border-radius: 8px;
+            color: #d4d4d4;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .level-btn:hover {
+            border-color: #4ec9b0;
+            background: #2d2d30;
+        }
+
+        .streaming-text {
+            color: #4ec9b0;
+        }
+
+        .report-container {
+            padding: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+            overflow-y: auto;
+        }
+
+        .report-section {
+            margin-bottom: 30px;
+            background: #252526;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .report-section h2 {
+            color: #4ec9b0;
+            margin-bottom: 15px;
+        }
+
+        .strengths-list, .weaknesses-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .strengths-list li {
+            color: #4ec9b0;
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .strengths-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+        }
+
+        .weaknesses-list li {
+            color: #ce9178;
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .weaknesses-list li:before {
+            content: "⚠";
+            position: absolute;
+            left: 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Level Selector Screen -->
+    <div id="level-selector" class="level-selector">
+        <h1>Выберите уровень собеседования</h1>
+        <div class="level-buttons">
+            <button class="level-btn" onclick="startInterview('Junior')">Junior</button>
+            <button class="level-btn" onclick="startInterview('Middle')">Middle</button>
+            <button class="level-btn" onclick="startInterview('Senior')">Senior</button>
+        </div>
+    </div>
+
+    <!-- Main Interview Screen -->
+    <div id="interview-screen" class="app-container hidden">
+        <div class="header">
+            <h1>AI Interviewer Platform</h1>
+            <div class="metrics-bar">
+                <div class="metric">
+                    <span>Задач:</span>
+                    <span class="metric-value" id="tasks-count">0</span>
+                </div>
+                <div class="metric">
+                    <span>Оценка:</span>
+                    <span class="metric-value" id="overall-score">0</span>
+                </div>
+                <div class="metric">
+                    <span>Время:</span>
+                    <span class="metric-value" id="time-spent">0:00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Left Panel: Task + IDE -->
+            <div class="left-panel">
+                <div class="panel-header">Задача</div>
+                <div class="task-view" id="task-view">
+                    <div class="task-title" id="task-title">Загрузка задачи...</div>
+                    <div class="task-description" id="task-description"></div>
+                    <div class="task-examples" id="task-examples"></div>
+                    <div class="test-results" id="test-results"></div>
+                </div>
+
+                <div class="ide-toolbar">
+                    <div>
+                        <span id="editor-language">Python</span>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="runCode()">▶ Запустить</button>
+                        <button class="btn btn-success" onclick="submitSolution()">✓ Отправить</button>
+                    </div>
+                </div>
+                <div class="ide-container">
+                    <div id="monaco-editor"></div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Chat -->
+            <div class="right-panel">
+                <div class="panel-header">Чат с интервьюером</div>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chat-input" 
+                               placeholder="Введите ваш ответ..." 
+                               onkeypress="handleChatKeyPress(event)">
+                        <button class="btn btn-primary" onclick="sendMessage()">Отправить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Screen -->
+    <div id="report-screen" class="hidden">
+        <div class="report-container" id="report-content"></div>
+    </div>
+
+    <script>
+        // Загрузка Monaco Editor
+        (function() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js';
+            script.onload = function() {
+                require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs' } });
+                require(['vs/editor/editor.main'], function() {
+                    window.monacoReady = true;
+                    if (window.initMonaco) {
+                        window.initMonaco();
+                    }
+                });
+            };
+            document.head.appendChild(script);
+        })();
+    </script>
+    <script src="src/services/interview-service.js"></script>
+    <script src="src/app.js"></script>
+</body>
+</html>
+

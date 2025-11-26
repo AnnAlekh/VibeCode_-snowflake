@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interviewer Platform</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Level Selector Screen -->
+    <div id="level-selector" class="screen active">
+        <div class="level-selector-container">
+            <h1>🎯 AI Interviewer Platform</h1>
+            <p class="subtitle">Выберите уровень собеседования</p>
+            <div class="level-buttons">
+                <button class="level-btn" onclick="startInterview('Junior')">
+                    <div class="level-title">Junior</div>
+                    <div class="level-desc">Базовый уровень</div>
+                </button>
+                <button class="level-btn" onclick="startInterview('Middle')">
+                    <div class="level-title">Middle</div>
+                    <div class="level-desc">Средний уровень</div>
+                </button>
+                <button class="level-btn" onclick="startInterview('Senior')">
+                    <div class="level-title">Senior</div>
+                    <div class="level-desc">Продвинутый уровень</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Interview Screen -->
+    <div id="interview-screen" class="screen">
+        <!-- Progress Bar -->
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+        </div>
+        
+        <!-- Status Notification -->
+        <div class="status-notification" id="status-notification">
+            <span id="status-icon">ℹ️</span>
+            <span id="status-message"></span>
+        </div>
+        
+        <!-- Stage Indicator -->
+        <div class="stage-indicator" id="stage-indicator">
+            <div class="stage-title">📊 Этапы интервью</div>
+            <div class="stage-item pending" id="stage-1">
+                <div class="stage-icon pending">1</div>
+                <div class="stage-text">
+                    <span>Генерация задачи</span>
+                    <span class="stage-duration" id="stage-1-time">—</span>
+                </div>
+            </div>
+            <div class="stage-item pending" id="stage-2">
+                <div class="stage-icon pending">2</div>
+                <div class="stage-text">
+                    <span>Решение задачи</span>
+                    <span class="stage-duration" id="stage-2-time">—</span>
+                </div>
+            </div>
+            <div class="stage-item pending" id="stage-3">
+                <div class="stage-icon pending">3</div>
+                <div class="stage-text">
+                    <span>Анализ решения</span>
+                    <span class="stage-duration" id="stage-3-time">—</span>
+                </div>
+            </div>
+            <div class="stage-item pending" id="stage-4">
+                <div class="stage-icon pending">4</div>
+                <div class="stage-text">
+                    <span>Вопрос интервьюера</span>
+                    <span class="stage-duration" id="stage-4-time">—</span>
+                </div>
+            </div>
+            <div class="stage-item pending" id="stage-5">
+                <div class="stage-icon pending">5</div>
+                <div class="stage-text">
+                    <span>Вторая задача</span>
+                    <span class="stage-duration" id="stage-5-time">—</span>
+                </div>
+            </div>
+            <div class="stage-item pending" id="stage-6">
+                <div class="stage-icon pending">6</div>
+                <div class="stage-text">
+                    <span>Финальный отчет</span>
+                    <span class="stage-duration" id="stage-6-time">—</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header">
+            <div class="header-left">
+                <h1>AI Interviewer Platform</h1>
+            </div>
+            <div class="metrics-bar">
+                <div class="metric">
+                    <span class="metric-label">Задач:</span>
+                    <span class="metric-value" id="tasks-count">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Оценка:</span>
+                    <span class="metric-value" id="overall-score">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Время:</span>
+                    <span class="metric-value" id="time-spent">0:00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Left Panel: Task + IDE -->
+            <div class="left-panel">
+                <div class="panel-section">
+                    <div class="panel-header">
+                        <span>📋 Задача</span>
+                        <span class="task-level" id="task-level">Junior</span>
+                    </div>
+                    <div class="task-view" id="task-view">
+                        <div class="loading">Загрузка задачи...</div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <div class="panel-header">
+                        <span>💻 Редактор кода</span>
+                        <select id="language-select" onchange="changeLanguage()">
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="java">Java</option>
+                        </select>
+                    </div>
+                    <div class="ide-toolbar">
+                        <button class="btn btn-run" onclick="runCode()">
+                            ▶ Запустить тесты
+                        </button>
+                        <button class="btn btn-submit" onclick="submitSolution()">
+                            ✓ Отправить решение
+                        </button>
+                    </div>
+                    <div class="ide-container">
+                        <div id="monaco-editor"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Chat -->
+            <div class="right-panel">
+                <div class="panel-section chat-section">
+                    <div class="panel-header">
+                        <span>💬 Чат с интервьюером</span>
+                    </div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="message assistant">
+                                <div class="message-bubble">
+                                    Привет! Я ваш AI-интервьюер. Давайте начнем!
+                                </div>
+                                <div class="message-time" id="welcome-time"></div>
+                            </div>
+                        </div>
+                        <button class="scroll-to-bottom-btn" id="scroll-to-bottom-btn" onclick="scrollChatToBottom()" title="Прокрутить вниз">
+                            ↓
+                        </button>
+                        <div class="chat-input-container">
+                            <input type="text" 
+                                   class="chat-input" 
+                                   id="chat-input" 
+                                   placeholder="Введите ваш ответ..." 
+                                   onkeypress="handleChatKeyPress(event)">
+                            <button class="btn btn-send" onclick="sendMessage()">Отправить</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Screen -->
+    <div id="report-screen" class="screen">
+        <div class="report-container" id="report-content">
+            <div class="loading">Генерация отчета...</div>
+        </div>
+    </div>
+
+    <!-- Monaco Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+

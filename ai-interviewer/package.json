@@ -1,0 +1,26 @@
+{
+  "name": "ai-interviewer",
+  "version": "1.0.0",
+  "description": "AI-powered interview system with adaptive task generation",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node src/index.js",
+    "server": "node src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2",
+    "openai": "^4.20.0"
+  },
+  "keywords": [
+    "ai",
+    "interview",
+    "code-generation",
+    "openai"
+  ],
+  "author": "",
+  "license": "MIT"
+}
