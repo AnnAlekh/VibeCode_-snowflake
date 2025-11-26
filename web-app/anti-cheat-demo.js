@@ -515,6 +515,26 @@ function protectAllMonacoEditors() {
                 e.stopPropagation();
             });
         });
+        children.forEach(child => {
+            child.addEventListener('drop', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            });
+        });
+    });
+    document.addEventListener('dragstart', function (e) {
+        e.preventDefault();
+        return false;
+    });
+
+    document.addEventListener('drop', function (e) {
+        e.preventDefault();
+        return false;
+    });
+
+    document.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        return false;
     });
 }
 
@@ -529,22 +549,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function disableRightClick() {
-    // Блокировка контекстного меню (правая кнопка)
-    document.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        console.log('Правая кнопка мыши заблокирована');
-    });
-     document.addEventListener('selectstart', function(e) {
-        e.preventDefault();
-    });
-    
-    
-    // Блокировка перетаскивания
-    document.addEventListener('dragstart', function(e) {
-        e.preventDefault();
-    });
-}
 // Интеграция с редактором кода
 function setupEditorMonitoring() {
     if (!window.editor) {
