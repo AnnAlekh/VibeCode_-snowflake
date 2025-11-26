@@ -334,7 +334,6 @@ async function submitSolution() {
             await askFollowUpQuestion(analysis);
         } else {
             if (interviewState.metrics.tasksCount === 2) {
-                await showAntiCheatDemo();
                 await startFinalDialogue();
             }
         }
