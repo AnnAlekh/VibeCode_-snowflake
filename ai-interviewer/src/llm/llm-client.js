@@ -48,11 +48,11 @@ class LLMClient {
     
     // Конфигурация моделей Qwen для разных задач
     this.models = {
-      taskGeneration: options.taskModel || process.env.TASK_MODEL || 'qwen-turbo',
-      taskStreaming: options.streamingModel || process.env.STREAMING_MODEL || 'qwen-turbo',
-      codeAnalysis: options.analysisModel || process.env.ANALYSIS_MODEL || 'qwen-plus',
-      chat: options.chatModel || process.env.CHAT_MODEL || 'qwen-turbo',
-      report: options.reportModel || process.env.REPORT_MODEL || 'qwen-plus'
+      taskGeneration: options.taskModel || process.env.TASK_MODEL || 'qwen3-32b-awq',
+      taskStreaming: options.streamingModel || process.env.STREAMING_MODEL || 'qwen3-32b-awq',
+      codeAnalysis: options.analysisModel || process.env.ANALYSIS_MODEL || 'qwen3-32b-awq',
+      chat: options.chatModel || process.env.CHAT_MODEL || 'qwen3-32b-awq',
+      report: options.reportModel || process.env.REPORT_MODEL || 'qwen3-32b-awq'
     };
     
     this.defaultTemperature = options.temperature || 0.7;
