@@ -50,10 +50,6 @@
         </div>
     </div>
 
-    <!-- Stage Indicator -->
-
-
-
 
     <!-- Main Interview Screen -->
     <div id="interview-screen" class="screen">
@@ -79,52 +75,51 @@
         <div class="modal-overlay" id="modal-overlay">
             <div class="modal">
                 <div class="modal-header">
-                    <div class="modal-title">📊 Этапы интервью</div>
+                    <div class="stage-title">📊 Этапы интервью</div>
                     <button class="close-btn" id="close-modal-btn">&times;</button>
                 </div>
-                <div class="modal-body">
-                    <div class="stage-indicator" id="stage-indicator">
-                        <div class="stage-item" id="stage-1">
-                            <div class="stage-icon pending">1</div>
-                            <div class="stage-text">
-                                <span>Генерация задачи</span>
-                                <span class="stage-duration" id="stage-1-time">—</span>
-                            </div>
+                <div class="stage-indicator" id="stage-indicator">
+
+                    <div class="stage-item pending" id="stage-1">
+                        <div class="stage-icon pending">1</div>
+                        <div class="stage-text">
+                            <span>Генерация задачи</span>
+                            <span class="stage-duration" id="stage-1-time">—</span>
                         </div>
-                        <div class="stage-item" id="stage-2">
-                            <div class="stage-icon pending">2</div>
-                            <div class="stage-text">
-                                <span>Решение задачи</span>
-                                <span class="stage-duration" id="stage-2-time">—</span>
-                            </div>
+                    </div>
+                    <div class="stage-item pending" id="stage-2">
+                        <div class="stage-icon pending">2</div>
+                        <div class="stage-text">
+                            <span>Решение задачи</span>
+                            <span class="stage-duration" id="stage-2-time">—</span>
                         </div>
-                        <div class="stage-item" id="stage-3">
-                            <div class="stage-icon pending">3</div>
-                            <div class="stage-text">
-                                <span>Анализ решения</span>
-                                <span class="stage-duration" id="stage-3-time">—</span>
-                            </div>
+                    </div>
+                    <div class="stage-item pending" id="stage-3">
+                        <div class="stage-icon pending">3</div>
+                        <div class="stage-text">
+                            <span>Анализ решения</span>
+                            <span class="stage-duration" id="stage-3-time">—</span>
                         </div>
-                        <div class="stage-item" id="stage-4">
-                            <div class="stage-icon pending">4</div>
-                            <div class="stage-text">
-                                <span>Вопрос интервьюера</span>
-                                <span class="stage-duration" id="stage-4-time">—</span>
-                            </div>
+                    </div>
+                    <div class="stage-item pending" id="stage-4">
+                        <div class="stage-icon pending">4</div>
+                        <div class="stage-text">
+                            <span>Вопрос интервьюера</span>
+                            <span class="stage-duration" id="stage-4-time">—</span>
                         </div>
-                        <div class="stage-item" id="stage-5">
-                            <div class="stage-icon pending">5</div>
-                            <div class="stage-text">
-                                <span>Вторая задача</span>
-                                <span class="stage-duration" id="stage-5-time">—</span>
-                            </div>
+                    </div>
+                    <div class="stage-item pending" id="stage-5">
+                        <div class="stage-icon pending">5</div>
+                        <div class="stage-text">
+                            <span>Вторая задача</span>
+                            <span class="stage-duration" id="stage-5-time">—</span>
                         </div>
-                        <div class="stage-item" id="stage-6">
-                            <div class="stage-icon pending">6</div>
-                            <div class="stage-text">
-                                <span>Финальный отчет</span>
-                                <span class="stage-duration" id="stage-6-time">—</span>
-                            </div>
+                    </div>
+                    <div class="stage-item pending" id="stage-6">
+                        <div class="stage-icon pending">6</div>
+                        <div class="stage-text">
+                            <span>Финальный отчет</span>
+                            <span class="stage-duration" id="stage-6-time">—</span>
                         </div>
                     </div>
                 </div>
@@ -185,7 +180,6 @@
         </div>
         <!-- Code Editor Section -->
         <div class="panel-section editor-section">
-
             <div class="panel-header-title ">
                 <div class="panel-header-title editor-header">
                     <span>📝 Редактор кода</span>
