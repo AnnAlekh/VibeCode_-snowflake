@@ -1,265 +1,431 @@
 // Интеграция системы античита с IDE
 class AntiCheatIntegration {
-    constructor() {
-        this.securityEvents = [];
-        this.screenshotCount = 0;
-        this.lastScreenshotTime = 0;
-        this.isMonitoring = false;
-        this.cheatDetection = {
-            clipboardUsage: 0,
-            tabSwitches: 0,
-            devToolsOpened: false,
-            rapidActions: 0,
-            suspiciousPatterns: 0
-        };
+  constructor() {
+    this.securityEvents = [];
+    this.screenshotCount = 0;
+    this.lastScreenshotTime = 0;
+    this.isMonitoring = false;
+    this.cheatDetection = {
+      clipboardUsage: 0,
+      tabSwitches: 0,
+      devToolsOpened: false,
+      rapidActions: 0,
+      suspiciousPatterns: 0,
+      //   suspiciousDomElements: 0,
+    };
 
-        console.log('🛡️ AntiCheatSystem: Конструктор вызван');
-        this.init();
-    }
+    // this.forbiddenSelectors = [
+    //   "grammarly",
+    //   "chatgpt",
+    //   "openai",
+    //   "sider",
+    //   "merlin",
+    //   "monica",
+    //   "translator",
+    //   "deepl",
+    //   "quillbot",
+    //   "ai-writer",
+    //   "extension-root",
+    //   "shadow-root",
+    //   "react-root", // общие подозрительные контейнеры вне нашего приложения
+    // ];
 
-    init() {
-        console.log('🛡️ AntiCheatSystem: Инициализация начата');
-        this.setupEventListeners();
-        this.startMonitoring();
-        this.showWelcomeMessage();
-    }
+    // this.forbiddenGlobals = [
+    //   "Jarvis", // По названию
+    //   "JarvisAI",
+    //   "GPT4API", // Общие маркеры AI
+    //   "MonacoEditorApi", // Может быть наш, но проверить
+    //   "__REACT_DEVTOOLS_GLOBAL_HOOK__", // Отладчики
+    // ];
+    console.log("🛡️ AntiCheatSystem: Конструктор вызван");
+    this.init();
+  }
 
-    setupEventListeners() {
-        console.log('🛡️ AntiCheatSystem: Настройка слушателей событий');
+  init() {
+    console.log("🛡️ AntiCheatSystem: Инициализация начата");
+    this.setupEventListeners();
+    this.startMonitoring();
+    this.showWelcomeMessage();
+    // this.setupExtensionDetection();
+    // this.setupGlobalVarDetection();
+  }
 
-        // Детектирование переключения вкладок
-        document.addEventListener('visibilitychange', () => {
-            console.log('🛡️ visibilitychange event:', document.hidden);
-            if (document.hidden) {
-                this.detectTabSwitch();
-            }
-        });
+  //   setupGlobalVarDetection() {
+  //     console.log("🛡️ AntiCheatSystem: Настройка детекции глобальных переменных");
 
-        // Детектирование потери фокуса
-        window.addEventListener('blur', () => {
-            console.log('🛡️ blur event');
-            this.detectFocusLoss();
-        });
+  //     this.forbiddenGlobals.forEach((globalVar) => {
+  //       // Проверяем, существует ли переменная в глобальной области видимости
+  //       if (window[globalVar]) {
+  //         // Если переменная существует и она не равна null/undefined (т.е. активна)
+  //         if (globalVar !== "MonacoEditorApi" || globalVar !== "window.editor") {
+  //           // Игнорируем наши известные API
+  //           this.cheatDetection.suspiciousPatterns++;
+  //           this.logSecurityEvent(
+  //             "global_injection",
+  //             `💉 Обнаружена инъекция глобальной переменной: ${globalVar}`,
+  //             "high"
+  //           );
+  //           this.takeScreenshot();
+  //         }
+  //       }
+  //     });
+  //   }
 
-        // Детектирование контекстного меню
-        document.addEventListener('contextmenu', (e) => {
-            console.log('🛡️ contextmenu event');
-            e.preventDefault();
-            this.detectContextMenu();
-        });
+  //   setupExtensionDetection() {
+  //     console.log("🛡️ AntiCheatSystem: Настройка детекции расширений");
 
-        // Детектирование нажатий клавиш
-        document.addEventListener('keydown', (e) => {
-            this.detectSuspiciousShortcuts(e);
-        });
-    }  
+  //     // Создаем Observer, который следит за изменениями в DOM
+  //     const observer = new MutationObserver((mutations) => {
+  //       this.handleDomMutation(mutations);
+  //     });
 
-    startMonitoring() {
-        this.isMonitoring = true;
-        this.startTime = Date.now();
+  //     // Следим за всем body: добавление узлов, изменение атрибутов
+  //     observer.observe(document.body, {
+  //       childList: true, // отслеживание добавления/удаления детей
+  //       subtree: true, // на всех уровнях вложенности
+  //       attributes: true, // изменения классов/style/id
+  //       attributeFilter: ["class", "id", "style"], // оптимизация: следим только за важным
+  //     });
+  //   }
 
-        console.log('🛡️ AntiCheatSystem: Мониторинг запущен');
+  //   handleDomMutation(mutations) {
+  //     let suspiciousFound = false;
 
-        // Случайные скриншоты каждые 30-60 секунд
-        setInterval(() => {
-            if (this.isMonitoring && Math.random() > 0.7) {
-                console.log('🛡️ Случайный скриншот');
-                this.takeScreenshot();
-            }
-        }, 30000);
+  //     mutations.forEach((mutation) => {
+  //       // 1. Проверяем добавленные узлы (Added Nodes)
+  //       if (mutation.type === "childList") {
+  //         mutation.addedNodes.forEach((node) => {
+  //           // Игнорируем текстовые узлы и комментарии, смотрим только на Элементы
+  //           if (node.nodeType === 1) {
+  //             if (this.checkSuspiciousElement(node)) {
+  //               suspiciousFound = true;
+  //             }
+  //           }
+  //         });
+  //       }
 
-        // Мониторинг бездействия
-        this.setupIdleDetection();
+  //       // 2. Проверяем изменение атрибутов у существующих элементов (Attributes)
+  //       // Расширения часто добавляют свои классы к твоим элементам
+  //       if (mutation.type === "attributes") {
+  //         const target = mutation.target;
+  //         if (this.checkSuspiciousElement(target)) {
+  //           suspiciousFound = true;
+  //         }
+  //       }
+  //     });
 
-        // Тестовое уведомление для проверки
-        setTimeout(() => {
-            this.logSecurityEvent(
-                'system_start',
-                '🛡️ Система защиты активирована и работает',
-                'low'
-            );
-        }, 2000);
-    }
+  //     if (suspiciousFound) {
+  //       // Дебаунс, чтобы не спамить алертами при каждом чихе расширения
+  //       if (!this.extensionAlertDebounce) {
+  //         this.extensionAlertDebounce = true;
 
-    setupIdleDetection() {
-        console.log('🛡️ AntiCheatSystem: Настройка детектирования бездействия');
-        let idleTimer;
-        const resetIdleTimer = () => {
-            clearTimeout(idleTimer);
-            idleTimer = setTimeout(() => {
-                console.log('🛡️ Обнаружено бездействие');
-                this.detectIdleTime();
-            }, 45000); // 45 секунд
-        };
+  //         this.cheatDetection.suspiciousDomElements++;
+  //         this.logSecurityEvent(
+  //           "extension_detected",
+  //           "🧩 Обнаружена активность стороннего расширения",
+  //           "medium"
+  //         );
+  //         this.takeScreenshot();
 
-        document.addEventListener('mousemove', resetIdleTimer);
-        document.addEventListener('keypress', resetIdleTimer);
-        document.addEventListener('click', resetIdleTimer);
-        resetIdleTimer();
-    }
+  //         setTimeout(() => {
+  //           this.extensionAlertDebounce = false;
+  //         }, 5000);
+  //       }
+  //     }
+  //   }
 
-    // === ДЕТЕКТОРЫ ПОДОЗРИТЕЛЬНЫХ ДЕЙСТВИЙ ===
+  //   checkSuspiciousElement(element) {
+  //     // Игнорируем наши собственные алерты и элементы античита
+  //     if (
+  //       element.classList &&
+  //       (element.classList.contains("security-alert") ||
+  //         element.classList.contains("screenshot-notification"))
+  //     ) {
+  //       return false;
+  //     }
 
-    detectTabSwitch() {
-        console.log('🛡️ detectTabSwitch вызван');
-        this.cheatDetection.tabSwitches++;
+  //     const elementString = (
+  //       (element.id || "") +
+  //       " " +
+  //       (element.className || "") +
+  //       " " +
+  //       (element.getAttribute("data-extension-id") || "")
+  //     ).toLowerCase();
+
+  //     // Проверка 1: Поиск ключевых слов в ID и ClassName
+  //     const hasForbiddenKeyword = this.forbiddenSelectors.some((keyword) =>
+  //       elementString.includes(keyword)
+  //     );
+
+  //     // Проверка 2: Подозрительные стили (Shadow DOM контейнеры часто имеют высокий z-index)
+  //     let hasSuspiciousStyle = false;
+  //     const style = window.getComputedStyle(element);
+  //     if (style.zIndex > 9999 && style.position === "fixed") {
+  //       hasSuspiciousStyle = true;
+  //     }
+
+  //     // Проверка 3: Shadow DOM (многие расширения прячутся там)
+  //     // Мы не можем видеть ВНУТРИ shadowRoot "закрытого" типа, но факт его наличия у левых элементов подозрителен
+  //     if (element.shadowRoot) {
+  //       hasSuspiciousStyle = true; // Можно считать наличие ShadowRoot подозрительным
+  //     }
+
+  //     if (hasForbiddenKeyword || hasSuspiciousStyle) {
+  //       console.warn("🛡️ Обнаружен подозрительный элемент:", element);
+  //       return true;
+  //     }
+
+  //     return false;
+  //   }
+
+  setupEventListeners() {
+    console.log("🛡️ AntiCheatSystem: Настройка слушателей событий");
+
+    // Детектирование переключения вкладок
+    document.addEventListener("visibilitychange", () => {
+      console.log("🛡️ visibilitychange event:", document.hidden);
+      if (document.hidden) {
+        this.detectTabSwitch();
+      }
+    });
+
+    // Детектирование потери фокуса
+    window.addEventListener("blur", () => {
+      console.log("🛡️ blur event");
+      this.detectFocusLoss();
+    });
+
+    // Детектирование контекстного меню
+    document.addEventListener("contextmenu", (e) => {
+      console.log("🛡️ contextmenu event");
+      e.preventDefault();
+      this.detectContextMenu();
+    });
+
+    // Детектирование нажатий клавиш
+    document.addEventListener("keydown", (e) => {
+      this.detectSuspiciousShortcuts(e);
+    });
+  }
+
+  startMonitoring() {
+    this.isMonitoring = true;
+    this.startTime = Date.now();
+
+    console.log("🛡️ AntiCheatSystem: Мониторинг запущен");
+
+    // Случайные скриншоты каждые 30-60 секунд
+    setInterval(() => {
+      if (this.isMonitoring && Math.random() > 0.7) {
+        console.log("🛡️ Случайный скриншот");
+        this.takeScreenshot();
+      }
+    }, 30000);
+
+    // Мониторинг бездействия
+    this.setupIdleDetection();
+
+    // Тестовое уведомление для проверки
+    setTimeout(() => {
+      this.logSecurityEvent(
+        "system_start",
+        "🛡️ Система защиты активирована и работает",
+        "low"
+      );
+    }, 2000);
+  }
+
+  setupIdleDetection() {
+    console.log("🛡️ AntiCheatSystem: Настройка детектирования бездействия");
+    let idleTimer;
+    const resetIdleTimer = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        console.log("🛡️ Обнаружено бездействие");
+        this.detectIdleTime();
+      }, 45000); // 45 секунд
+    };
+
+    document.addEventListener("mousemove", resetIdleTimer);
+    document.addEventListener("keypress", resetIdleTimer);
+    document.addEventListener("click", resetIdleTimer);
+    resetIdleTimer();
+  }
+
+  // === ДЕТЕКТОРЫ ПОДОЗРИТЕЛЬНЫХ ДЕЙСТВИЙ ===
+
+  detectTabSwitch() {
+    console.log("🛡️ detectTabSwitch вызван");
+    this.cheatDetection.tabSwitches++;
+    this.logSecurityEvent(
+      "tab_switch",
+      "📑 Обнаружено переключение вкладок",
+      "medium"
+    );
+    this.takeScreenshot();
+  }
+
+  detectFocusLoss() {
+    console.log("🛡️ detectFocusLoss вызван");
+    this.logSecurityEvent(
+      "focus_lost",
+      "🎯 Обнаружена потеря фокуса окна",
+      "medium"
+    );
+  }
+
+  detectContextMenu() {
+    console.log("🛡️ detectContextMenu вызван");
+    this.logSecurityEvent(
+      "context_menu",
+      "🖱️ Блокировка контекстного меню",
+      "low"
+    );
+  }
+
+  detectSuspiciousShortcuts(event) {
+    const suspiciousCombinations = [
+      { ctrl: true, key: "u", message: "Просмотр исходного кода" },
+      { ctrl: true, shift: true, key: "i", message: "Открытие DevTools" },
+      { ctrl: true, key: "v", message: "Попытка вставки" },
+      { f12: true, message: "Открытие DevTools" },
+      { ctrl: true, key: "c", message: "Копирование" },
+      {
+        ctrl: true,
+        shift: true,
+        key: "c",
+        message: "Дублирование копирования",
+      },
+      { ctrl: true, key: "s", message: "Попытка сохранения" },
+      { ctrl: true, shift: true, key: "j", message: "Открытие DevTools" },
+    ];
+
+    suspiciousCombinations.forEach(({ ctrl, shift, f12, key, message }) => {
+      const match =
+        (ctrl === undefined || ctrl === event.ctrlKey) &&
+        (shift === undefined || shift === event.shiftKey) &&
+        ((key && event.key.toLowerCase() === key) ||
+          (f12 && event.key === "F12"));
+
+      if (match) {
+        console.log(
+          "🛡️ Подозрительная комбинация клавиш:",
+          event.key,
+          event.ctrlKey,
+          event.shiftKey
+        );
+        event.preventDefault();
         this.logSecurityEvent(
-            'tab_switch',
-            '📑 Обнаружено переключение вкладок',
-            'medium'
+          "suspicious_shortcut",
+          `⌨️ Блокировка подозрительной комбинации: ${message}`,
+          "high"
         );
         this.takeScreenshot();
-    }
+      }
+    });
+  }
 
-    detectFocusLoss() {
-        console.log('🛡️ detectFocusLoss вызван');
-        this.logSecurityEvent(
-            'focus_lost',
-            '🎯 Обнаружена потеря фокуса окна',
-            'medium'
-        );
-    }
+  detectDevTools() {
+    console.log("🛡️ detectDevTools вызван");
+    this.logSecurityEvent(
+      "devtools",
+      "⚠️ Обнаружено открытие DevTools",
+      "high"
+    );
+    this.takeScreenshot();
+  }
 
-    detectContextMenu() {
-        console.log('🛡️ detectContextMenu вызван');
-        this.logSecurityEvent(
-            'context_menu',
-            '🖱️ Блокировка контекстного меню',
-            'low'
-        );
-    }
+  detectIdleTime() {
+    console.log("🛡️ detectIdleTime вызван");
+    this.logSecurityEvent("idle", "⏸️ Обнаружен период бездействия", "low");
+  }
 
-    detectSuspiciousShortcuts(event) {
-        const suspiciousCombinations = [
-            { ctrl: true, key: 'u', message: 'Просмотр исходного кода' },
-            { ctrl: true, shift: true, key: 'i', message: 'Открытие DevTools' },
-            { ctrl: true, key: 'v', message: 'Попытка вставки' },
-            { f12: true, message: 'Открытие DevTools' },
-            {ctrl: true, key: 'c', message: 'Копирование'},
-            { ctrl: true, shift: true, key: 'c', message: 'Дублирование копирования' },
-            { ctrl: true, key: 's', message: 'Попытка сохранения' },
-            { ctrl: true, shift: true, key: 'j', message: 'Открытие DevTools' }
-        ];
+  detectRapidCoding() {
+    console.log("🛡️ detectRapidCoding вызван");
+    this.cheatDetection.rapidActions++;
+    this.logSecurityEvent(
+      "rapid_input",
+      "💨 Обнаружен слишком быстрый ввод кода",
+      "medium"
+    );
+    this.takeScreenshot();
+  }
 
-        suspiciousCombinations.forEach(({ ctrl, shift, f12, key, message }) => {
-            const match = (
-                (ctrl === undefined || ctrl === event.ctrlKey) &&
-                (shift === undefined || shift === event.shiftKey) &&
-                ((key && event.key.toLowerCase() === key) || (f12 && event.key === 'F12'))
-            );
+  // === СИСТЕМА СКРИНШОТОВ ===
 
-            if (match) {
-                console.log('🛡️ Подозрительная комбинация клавиш:', event.key, event.ctrlKey, event.shiftKey);
-                event.preventDefault();
-                this.logSecurityEvent(
-                    'suspicious_shortcut',
-                    `⌨️ Блокировка подозрительной комбинации: ${message}`,
-                    'high'
-                );
-                this.takeScreenshot();
-            }
-        });
-    }
+  takeScreenshot() {
+    if (!this.isMonitoring) return;
 
-    detectDevTools() {
-        console.log('🛡️ detectDevTools вызван');
-        this.logSecurityEvent(
-            'devtools',
-            '⚠️ Обнаружено открытие DevTools',
-            'high'
-        );
-        this.takeScreenshot();
-    }
+    this.screenshotCount++;
+    const timestamp = new Date().toLocaleTimeString();
 
-    detectIdleTime() {
-        console.log('🛡️ detectIdleTime вызван');
-        this.logSecurityEvent(
-            'idle',
-            '⏸️ Обнаружен период бездействия',
-            'low'
-        );
-    }
+    console.log(`🛡️ takeScreenshot #${this.screenshotCount} в ${timestamp}`);
 
-    detectRapidCoding() {
-        console.log('🛡️ detectRapidCoding вызван');
-        this.cheatDetection.rapidActions++;
-        this.logSecurityEvent(
-            'rapid_input',
-            '💨 Обнаружен слишком быстрый ввод кода',
-            'medium'
-        );
-        this.takeScreenshot();
-    }
+    const screenshotData = {
+      id: this.screenshotCount,
+      timestamp: timestamp,
+      code: window.editor ? window.editor.getValue() : "N/A",
+      securityEvents: [...this.securityEvents],
+      cheatMetrics: { ...this.cheatDetection },
+    };
 
-    // === СИСТЕМА СКРИНШОТОВ ===
+    // Показываем уведомление о скриншоте
+    this.showScreenshotNotification();
 
-    takeScreenshot() {
-        if (!this.isMonitoring) return;
+    // Сохраняем в localStorage для демо
+    this.saveScreenshot(screenshotData);
 
-        this.screenshotCount++;
-        const timestamp = new Date().toLocaleTimeString();
+    this.lastScreenshotTime = Date.now();
 
-        console.log(`🛡️ takeScreenshot #${this.screenshotCount} в ${timestamp}`);
+    return screenshotData;
+  }
 
-        const screenshotData = {
-            id: this.screenshotCount,
-            timestamp: timestamp,
-            code: window.editor ? window.editor.getValue() : 'N/A',
-            securityEvents: [...this.securityEvents],
-            cheatMetrics: { ...this.cheatDetection }
-        };
+  saveScreenshot(screenshotData) {
+    const screenshots = JSON.parse(
+      localStorage.getItem("interview_screenshots") || "[]"
+    );
+    screenshots.push(screenshotData);
+    localStorage.setItem("interview_screenshots", JSON.stringify(screenshots));
+  }
 
-        // Показываем уведомление о скриншоте
-        this.showScreenshotNotification();
+  // === СИСТЕМА УВЕДОМЛЕНИЙ ===
 
-        // Сохраняем в localStorage для демо
-        this.saveScreenshot(screenshotData);
+  logSecurityEvent(type, message, severity = "medium") {
+    console.log(`🛡️ logSecurityEvent: ${type} - ${message} - ${severity}`);
 
-        this.lastScreenshotTime = Date.now();
+    const event = {
+      type,
+      message,
+      severity,
+      timestamp: new Date().toLocaleTimeString(),
+      riskScore: this.calculateRiskScore(severity),
+    };
 
-        return screenshotData;
-    }
+    this.securityEvents.push(event);
+    this.showSecurityAlert(event);
 
-    saveScreenshot(screenshotData) {
-        const screenshots = JSON.parse(localStorage.getItem('interview_screenshots') || '[]');
-        screenshots.push(screenshotData);
-        localStorage.setItem('interview_screenshots', JSON.stringify(screenshots));
-    }
+    return event;
+  }
 
-    // === СИСТЕМА УВЕДОМЛЕНИЙ ===
+  calculateRiskScore(severity) {
+    const scores = { low: 1, medium: 3, high: 5 };
+    return scores[severity] || 1;
+  }
 
-    logSecurityEvent(type, message, severity = 'medium') {
-        console.log(`🛡️ logSecurityEvent: ${type} - ${message} - ${severity}`);
+  showSecurityAlert(event) {
+    console.log(
+      `🛡️ showSecurityAlert: Создание уведомления для "${event.message}"`
+    );
 
-        const event = {
-            type,
-            message,
-            severity,
-            timestamp: new Date().toLocaleTimeString(),
-            riskScore: this.calculateRiskScore(severity)
-        };
+    // Проверяем, есть ли стили в DOM
+    this.ensureStylesExist();
 
-        this.securityEvents.push(event);
-        this.showSecurityAlert(event);
-
-        return event;
-    }
-
-    calculateRiskScore(severity) {
-        const scores = { low: 1, medium: 3, high: 5 };
-        return scores[severity] || 1;
-    }
-
-    showSecurityAlert(event) {
-        console.log(`🛡️ showSecurityAlert: Создание уведомления для "${event.message}"`);
-
-        // Проверяем, есть ли стили в DOM
-        this.ensureStylesExist();
-
-        const alert = document.createElement('div');
-        alert.className = `security-alert severity-${event.severity}`;
-        alert.innerHTML = `
-            <div class="security-alert-icon">${this.getSeverityIcon(event.severity)}</div>
+    const alert = document.createElement("div");
+    alert.className = `security-alert severity-${event.severity}`;
+    alert.innerHTML = `
+            <div class="security-alert-icon">${this.getSeverityIcon(
+              event.severity
+            )}</div>
             <div class="security-alert-content">
                 <div class="security-alert-title">${event.message}</div>
                 <div class="security-alert-time">${event.timestamp}</div>
@@ -267,28 +433,30 @@ class AntiCheatIntegration {
             <button class="security-alert-close" onclick="this.parentElement.remove()">×</button>
         `;
 
-        // Добавляем в документ
-        document.body.appendChild(alert);
-        console.log('🛡️ Уведомление добавлено в DOM');
+    // Добавляем в документ
+    document.body.appendChild(alert);
+    console.log("🛡️ Уведомление добавлено в DOM");
 
-        // Автоматическое удаление через 5 секунд
-        setTimeout(() => {
-            if (alert.parentElement) {
-                console.log('🛡️ Автоматическое удаление уведомления');
-                alert.remove();
-            }
-        }, 5000);
-    }
+    // Автоматическое удаление через 5 секунд
+    setTimeout(() => {
+      if (alert.parentElement) {
+        console.log("🛡️ Автоматическое удаление уведомления");
+        alert.remove();
+      }
+    }, 5000);
+  }
 
-    showScreenshotNotification() {
-        console.log('🛡️ showScreenshotNotification: Создание уведомления о скриншоте');
+  showScreenshotNotification() {
+    console.log(
+      "🛡️ showScreenshotNotification: Создание уведомления о скриншоте"
+    );
 
-        // Проверяем, есть ли стили в DOM
-        this.ensureStylesExist();
+    // Проверяем, есть ли стили в DOM
+    this.ensureStylesExist();
 
-        const notification = document.createElement('div');
-        notification.className = 'screenshot-notification';
-        notification.innerHTML = `
+    const notification = document.createElement("div");
+    notification.className = "screenshot-notification";
+    notification.innerHTML = `
             <div class="screenshot-icon">📸</div>
             <div class="screenshot-content">
                 <div class="screenshot-title">Скриншот сохранен</div>
@@ -296,194 +464,200 @@ class AntiCheatIntegration {
             </div>
         `;
 
-        document.body.appendChild(notification);
-        console.log('🛡️ Уведомление о скриншоте добавлено в DOM');
+    document.body.appendChild(notification);
+    console.log("🛡️ Уведомление о скриншоте добавлено в DOM");
 
-        setTimeout(() => {
-            if (notification.parentElement) {
-                notification.remove();
-            }
-        }, 3000);
-    }
+    setTimeout(() => {
+      if (notification.parentElement) {
+        notification.remove();
+      }
+    }, 3000);
+  }
 
-    ensureStylesExist() {
-        // Проверяем, есть ли уже стили в DOM
-        const existingStyles = document.querySelector('style[data-anti-cheat-styles]');
-        if (existingStyles) return;
+  ensureStylesExist() {
+    // Проверяем, есть ли уже стили в DOM
+    const existingStyles = document.querySelector(
+      "style[data-anti-cheat-styles]"
+    );
+    if (existingStyles) return;
 
-        // Проверяем, подключен ли styles.css с нашими стилями
-        const stylesheets = Array.from(document.styleSheets);
-        let hasAntiCheatStyles = false;
+    // Проверяем, подключен ли styles.css с нашими стилями
+    const stylesheets = Array.from(document.styleSheets);
+    let hasAntiCheatStyles = false;
 
-        for (let stylesheet of stylesheets) {
-            try {
-                const rules = Array.from(stylesheet.cssRules || []);
-                const hasSecurityAlert = rules.some(rule =>
-                    rule.selectorText && rule.selectorText.includes('.security-alert')
-                );
-                if (hasSecurityAlert) {
-                    hasAntiCheatStyles = true;
-                    break;
-                }
-            } catch (e) {
-                // Игнорируем ошибки CORS
-            }
-        }
-
-        // Если стилей нет ни в styles.css, ни в DOM - добавляем динамически
-        if (!hasAntiCheatStyles) {
-            console.log('🛡️ Стили не найдены, добавляем динамически');
-            this.addDynamicStyles();
-        }
-    }
-
-    showWelcomeMessage() {
-        console.log('🛡️ showWelcomeMessage: Показ приветственного сообщения');
-    }
-
-    getSeverityIcon(severity) {
-        const icons = {
-            low: 'ℹ️',
-            medium: '⚠️',
-            high: '🚨'
-        };
-        return icons[severity] || 'ℹ️';
-    }
-
-    // === ПУБЛИЧНЫЕ МЕТОДЫ ===
-
-    getSecurityData() {
-        return {
-            events: this.securityEvents,
-            screenshots: this.screenshotCount,
-            metrics: this.cheatDetection,
-            monitoringDuration: Math.floor((Date.now() - this.startTime) / 1000)
-        };
-    }
-
-    stopMonitoring() {
-        this.isMonitoring = false;
-        this.logSecurityEvent(
-            'system_stop',
-            '🛡️ Система защиты остановлена',
-            'low'
+    for (let stylesheet of stylesheets) {
+      try {
+        const rules = Array.from(stylesheet.cssRules || []);
+        const hasSecurityAlert = rules.some(
+          (rule) =>
+            rule.selectorText && rule.selectorText.includes(".security-alert")
         );
+        if (hasSecurityAlert) {
+          hasAntiCheatStyles = true;
+          break;
+        }
+      } catch (e) {
+        // Игнорируем ошибки CORS
+      }
     }
 
+    // Если стилей нет ни в styles.css, ни в DOM - добавляем динамически
+    if (!hasAntiCheatStyles) {
+      console.log("🛡️ Стили не найдены, добавляем динамически");
+      this.addDynamicStyles();
+    }
+  }
+
+  showWelcomeMessage() {
+    console.log("🛡️ showWelcomeMessage: Показ приветственного сообщения");
+  }
+
+  getSeverityIcon(severity) {
+    const icons = {
+      low: "ℹ️",
+      medium: "⚠️",
+      high: "🚨",
+    };
+    return icons[severity] || "ℹ️";
+  }
+
+  // === ПУБЛИЧНЫЕ МЕТОДЫ ===
+
+  getSecurityData() {
+    return {
+      events: this.securityEvents,
+      screenshots: this.screenshotCount,
+      metrics: this.cheatDetection,
+      monitoringDuration: Math.floor((Date.now() - this.startTime) / 1000),
+    };
+  }
+
+  stopMonitoring() {
+    this.isMonitoring = false;
+    this.logSecurityEvent(
+      "system_stop",
+      "🛡️ Система защиты остановлена",
+      "low"
+    );
+  }
 }
 
 function protectAllMonacoEditors() {
-    // Ищем все элементы Monaco
-    const monacoElements = document.querySelectorAll('.monaco-editor');
-    monacoElements.forEach(element => {
-        element.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-        
-        // Защищаем внутренние элементы
-        const children = element.querySelectorAll('*');
-        children.forEach(child => {
-            child.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-        });
-        children.forEach(child => {
-            child.addEventListener('drop', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            });
-        });
-    });
-    document.addEventListener('dragstart', function (e) {
-        e.preventDefault();
-        return false;
+  // Ищем все элементы Monaco
+  const monacoElements = document.querySelectorAll(".monaco-editor");
+  monacoElements.forEach((element) => {
+    element.addEventListener("contextmenu", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
     });
 
-    document.addEventListener('drop', function (e) {
+    // Защищаем внутренние элементы
+    const children = element.querySelectorAll("*");
+    children.forEach((child) => {
+      child.addEventListener("contextmenu", function (e) {
         e.preventDefault();
-        return false;
+        e.stopPropagation();
+      });
     });
+    children.forEach((child) => {
+      child.addEventListener("drop", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+  });
+  document.addEventListener("dragstart", function (e) {
+    e.preventDefault();
+    return false;
+  });
 
-    document.addEventListener('dragover', function (e) {
-        e.preventDefault();
-        return false;
-    });
+  document.addEventListener("drop", function (e) {
+    e.preventDefault();
+    return false;
+  });
+
+  document.addEventListener("dragover", function (e) {
+    e.preventDefault();
+    return false;
+  });
 }
 
 // Запускаем защиту
-document.addEventListener('DOMContentLoaded', function() {
-    // Ждем загрузки Monaco
-    setTimeout(protectAllMonacoEditors, 2000);
-    
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+document.addEventListener("DOMContentLoaded", function () {
+  // Ждем загрузки Monaco
+  setTimeout(protectAllMonacoEditors, 2000);
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
 });
 
 // Интеграция с редактором кода
 function setupEditorMonitoring() {
-    if (!window.editor) {
-        console.log('🛡️ setupEditorMonitoring: редактор не найден, повтор через 1 сек');
-        setTimeout(setupEditorMonitoring, 1000);
-        return;
+  if (!window.editor) {
+    console.log(
+      "🛡️ setupEditorMonitoring: редактор не найден, повтор через 1 сек"
+    );
+    setTimeout(setupEditorMonitoring, 1000);
+    return;
+  }
+
+  console.log(
+    "🛡️ setupEditorMonitoring: редактор найден, настройка мониторинга"
+  );
+
+  let lastContent = window.editor.getValue();
+  let lastChangeTime = Date.now();
+  let changeCount = 0;
+
+  window.editor.onDidChangeModelContent(() => {
+    const currentTime = Date.now();
+    const currentContent = window.editor.getValue();
+
+    // Детектирование быстрого набора
+    if (currentTime - lastChangeTime < 100) {
+      changeCount++;
+      if (changeCount > 10) {
+        console.log("🛡️ Обнаружен быстрый ввод кода");
+        if (window.antiCheatSystem) {
+          window.antiCheatSystem.detectRapidCoding();
+        }
+        changeCount = 0;
+      }
+    } else {
+      changeCount = 0;
     }
 
-    console.log('🛡️ setupEditorMonitoring: редактор найден, настройка мониторинга');
+    lastChangeTime = currentTime;
 
-    let lastContent = window.editor.getValue();
-    let lastChangeTime = Date.now();
-    let changeCount = 0;
+    // Детектирование больших изменений (возможная вставка)
+    if (currentContent.length - lastContent.length > 50) {
+      console.log("🛡️ Обнаружена большая вставка кода");
+      if (window.antiCheatSystem) {
+        window.antiCheatSystem.logSecurityEvent(
+          "large_insert",
+          "📝 Обнаружена вставка большого фрагмента кода",
+          "medium"
+        );
+      }
+    }
 
-    window.editor.onDidChangeModelContent(() => {
-        const currentTime = Date.now();
-        const currentContent = window.editor.getValue();
+    lastContent = currentContent;
+  });
 
-        // Детектирование быстрого набора
-        if (currentTime - lastChangeTime < 100) {
-            changeCount++;
-            if (changeCount > 10) {
-                console.log('🛡️ Обнаружен быстрый ввод кода');
-                if (window.antiCheatSystem) {
-                    window.antiCheatSystem.detectRapidCoding();
-                }
-                changeCount = 0;
-            }
-        } else {
-            changeCount = 0;
-        }
-
-        lastChangeTime = currentTime;
-
-        // Детектирование больших изменений (возможная вставка)
-        if (currentContent.length - lastContent.length > 50) {
-            console.log('🛡️ Обнаружена большая вставка кода');
-            if (window.antiCheatSystem) {
-                window.antiCheatSystem.logSecurityEvent(
-                    'large_insert',
-                    '📝 Обнаружена вставка большого фрагмента кода',
-                    'medium'
-                );
-            }
-        }
-
-        lastContent = currentContent;
-    });
-
-    console.log('🛡️ Мониторинг редактора настроен');
+  console.log("🛡️ Мониторинг редактора настроен");
 }
 
 // Инициализация при загрузке
 function integrateAntiCheat() {
-    console.log('🛡️ integrateAntiCheat: Начало интеграции');
-    window.antiCheatSystem = new AntiCheatIntegration();
-    setTimeout(setupEditorMonitoring, 2000);
+  console.log("🛡️ integrateAntiCheat: Начало интеграции");
+  window.antiCheatSystem = new AntiCheatIntegration();
+  setTimeout(setupEditorMonitoring, 2000);
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', integrateAntiCheat);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", integrateAntiCheat);
 } else {
-    integrateAntiCheat();
+  integrateAntiCheat();
 }
