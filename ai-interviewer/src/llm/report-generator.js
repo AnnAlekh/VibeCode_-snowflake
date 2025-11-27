@@ -1,5 +1,5 @@
 import LLMClient from './llm-client.js';
-import PROMPTS from './prompts/interview-prompts.js';
+import PROMPTS from '../prompts/interview-prompts.js';
 import fs from 'fs';
 import PDFDocument from 'pdfkit';
 import { createObjectCsvWriter } from 'csv-writer';
