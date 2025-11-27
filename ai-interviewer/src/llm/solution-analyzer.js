@@ -37,18 +37,54 @@ class SolutionAnalyzer {
         temperature: 0.3 // Низкая температура для более точного анализа
       });
 
-      // Дополняем анализ метриками
+      // Извлекаем метрики производительности из testResults
+      const testResults = params.testResults || {};
+      const performance = testResults.performance || {};
+      
+      // Извлекаем время выполнения из результатов тестов
+      const visibleTests = testResults.visible || [];
+      const hiddenTests = testResults.hidden || [];
+      const allTests = [...visibleTests, ...hiddenTests];
+      
+      // Вычисляем метрики производительности
+      const executionTimes = allTests
+        .map(t => t.executionTime)
+        .filter(t => t !== undefined && t !== null);
+      
+      const averageExecutionTime = executionTimes.length > 0
+        ? executionTimes.reduce((sum, t) => sum + t, 0) / executionTimes.length
+        : 0;
+      const maxExecutionTime = executionTimes.length > 0
+        ? Math.max(...executionTimes)
+        : 0;
+      const minExecutionTime = executionTimes.length > 0
+        ? Math.min(...executionTimes)
+        : 0;
+      
+      // Дополняем анализ метриками производительности
       const enhancedAnalysis = {
         correctness: analysis.correctness || 0,
         optimality: analysis.optimality || 0,
         codeQuality: analysis.codeQuality || 0,
-        timeComplexity: analysis.timeComplexity || 'не определена',
+        timeComplexity: analysis.timeComplexity || analysis.complexity || 'не определена',
         spaceComplexity: analysis.spaceComplexity || 'не определена',
-        feedback: analysis.feedback || '',
+        feedback: analysis.feedback || analysis.comments || '',
         strengths: analysis.strengths || [],
         weaknesses: analysis.weaknesses || [],
         suggestions: analysis.suggestions || [],
-        overallScore: this.calculateOverallScore(analysis)
+        overallScore: this.calculateOverallScore(analysis),
+        score: this.calculateOverallScore(analysis), // Дублируем для совместимости
+        // Добавляем метрики производительности
+        performance: {
+          averageExecutionTime: performance.averageHiddenTime || performance.averageVisibleTime || averageExecutionTime,
+          maxExecutionTime: performance.maxExecutionTime || maxExecutionTime,
+          minExecutionTime: performance.minExecutionTime || minExecutionTime,
+          totalExecutionTime: (performance.totalHiddenTime || 0) + (performance.totalVisibleTime || 0) || 
+                            executionTimes.reduce((sum, t) => sum + t, 0),
+          testsCount: performance.totalTests || allTests.length,
+          passedTestsCount: performance.passedTests || allTests.filter(t => t.passed).length,
+          executionTimes: executionTimes.length > 0 ? executionTimes : undefined
+        }
       };
 
       console.log(`✅ Анализ завершен. Общая оценка: ${enhancedAnalysis.overallScore}/100`);
@@ -117,30 +153,106 @@ class SolutionAnalyzer {
    * @returns {string} Вопрос для кандидата
    */
   async generateFollowUpQuestion(params) {
-    const { task, solution, testResults } = params;
+    const { task, solution, testResults, analysis } = params;
 
-    console.log(`\n💬 Генерация вопроса о решении`);
+    console.log(`\n💬 Генерация технического вопроса о решении первой задачи`);
 
-    const prompt = PROMPTS.generateFollowUpQuestion(task, solution, testResults);
+    const prompt = PROMPTS.generateFollowUpQuestion(task, solution, testResults, analysis);
 
     try {
       const question = await this.llmClient.chatDialogue([
         {
           role: 'system',
-          content: 'Ты интервьюер. Задай один вопрос от первого лица ("Я", "Мне интересно"). Будь кратким. Только вопрос.'
+          content: 'Ты технический интервьюер и общаешься ТОЛЬКО на русском языке. В этом ответе нельзя показывать ход рассуждений — никаких вступлений вроде "давайте посмотрим", "сначала я проверю" и т.п. Сформулируй сразу один КОНКРЕТНЫЙ ТЕХНИЧЕСКИЙ вопрос от первого лица, который напрямую связан с конкретными деталями решения кандидата. Вопрос должен ссылаться на конкретные части кода, структуры данных, алгоритмические решения или обработку граничных случаев, которые видны в решении. НЕ задавай общие вопросы - задай конкретный вопрос про конкретный аспект решения. Формат строго: одно или два предложения на русском языке, последние символы ответа — знак вопроса "?". Никаких списков, объяснений до или после вопроса, выводи только сам технический вопрос.'
         },
         {
           role: 'user',
           content: prompt
         }
       ], {
-        temperature: 0.8,
-        max_tokens: 150 // Уменьшено для ускорения
+        temperature: 0.6,
+        max_tokens: 220
       });
 
       return question;
     } catch (error) {
       console.error('Ошибка при генерации вопроса:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Генерация технического вопроса для второй задачи
+   * @param {Object} params - Параметры
+   * @param {Object} params.task - Задача
+   * @param {string} params.solution - Решение кандидата
+   * @param {Object} params.testResults - Результаты тестов
+   * @param {Object} params.analysis - Анализ решения
+   * @returns {string} Технический вопрос для кандидата
+   */
+  async generateTechnicalFollowUpQuestion(params) {
+    const { task, solution, testResults, analysis } = params;
+
+    console.log(`\n💬 Генерация технического вопроса о решении второй задачи`);
+
+    const prompt = PROMPTS.generateTechnicalFollowUpQuestion(task, solution, testResults, analysis);
+
+    try {
+      const question = await this.llmClient.chatDialogue([
+        {
+          role: 'system',
+          content: 'Ты технический интервьюер и общаешься ТОЛЬКО на русском языке. В этом ответе нельзя показывать ход рассуждений — никаких вступлений вроде "давайте посмотрим", "сначала я проверю" и т.п. Сформулируй сразу один КОНКРЕТНЫЙ ТЕХНИЧЕСКИЙ вопрос от первого лица, который напрямую связан с конкретными деталями решения кандидата. Вопрос должен ссылаться на конкретные части кода, структуры данных, алгоритмические решения или обработку граничных случаев, которые видны в решении. НЕ задавай общие вопросы - задай конкретный вопрос про конкретный аспект решения. Формат строго: одно или два предложения на русском языке, последние символы ответа — знак вопроса "?". Никаких списков, объяснений до или после вопроса, выводи только сам технический вопрос.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ], {
+        temperature: 0.6,
+        max_tokens: 250
+      });
+
+      return question;
+    } catch (error) {
+      console.error('Ошибка при генерации технического вопроса:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Генерация третьего завершающего вопроса для второй задачи
+   * @param {Object} params - Параметры
+   * @param {Object} params.task - Задача
+   * @param {string} params.solution - Решение кандидата
+   * @param {string} params.previousAnswer - Предыдущий ответ кандидата
+   * @param {Object} params.analysis - Анализ решения
+   * @returns {string} Третий завершающий вопрос для кандидата
+   */
+  async generateThirdQuestion(params) {
+    const { task, solution, previousAnswer, analysis } = params;
+
+    console.log(`\n💬 Генерация третьего завершающего вопроса`);
+
+    const prompt = PROMPTS.generateThirdQuestion(task, solution, previousAnswer, analysis);
+
+    try {
+      const question = await this.llmClient.chatDialogue([
+        {
+          role: 'system',
+          content: 'Ты технический интервьюер и общаешься ТОЛЬКО на русском языке. В этом ответе нельзя показывать ход рассуждений — никаких вступлений вроде "давайте посмотрим", "сначала я проверю" и т.п. Сформулируй сразу один конкретный завершающий вопрос от первого лица, который углубляется в понимание решения или проверяет способность кандидата рассуждать о масштабируемости, альтернативных подходах, улучшениях или практическом применении. Формат строго: одно или два предложения на русском языке, последние символы ответа — знак вопроса "?". Никаких списков, объяснений до или после вопроса, выводи только сам вопрос.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ], {
+        temperature: 0.6,
+        max_tokens: 280
+      });
+
+      return question;
+    } catch (error) {
+      console.error('Ошибка при генерации третьего вопроса:', error);
       throw error;
     }
   }
@@ -154,11 +266,11 @@ class SolutionAnalyzer {
    * @returns {Object} Оценка ответа
    */
   async evaluateAnswer(params) {
-    const { question, answer, solution } = params;
+    const { question, answer, solution, context = {} } = params;
 
     console.log(`\n📝 Оценка ответа кандидата`);
 
-    const prompt = PROMPTS.evaluateAnswer(question, answer, solution);
+    const prompt = PROMPTS.evaluateAnswer({ question, answer, solution, context });
 
     try {
       const evaluation = await this.llmClient.analyzeCode([
@@ -179,10 +291,93 @@ class SolutionAnalyzer {
         feedback: evaluation.feedback || '',
         understanding: evaluation.understanding || 0,
         communication: evaluation.communication || 0,
+        isSufficient: evaluation.isSufficient !== undefined ? evaluation.isSufficient : 
+                     (evaluation.understanding >= 70 && evaluation.communication >= 70 && evaluation.score >= 70),
         details: evaluation.details || {}
       };
     } catch (error) {
       console.error('Ошибка при оценке ответа:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Генерация дополнительного технического вопроса, если ответ был недостаточным
+   * @param {Object} params - Параметры
+   * @param {Object} params.task - Задача
+   * @param {string} params.solution - Решение кандидата
+   * @param {string} params.previousQuestion - Предыдущий вопрос
+   * @param {string} params.previousAnswer - Предыдущий ответ кандидата
+   * @param {Object} params.analysis - Анализ решения
+   * @param {number} params.questionNumber - Номер задачи (1 или 2)
+   * @returns {string} Дополнительный технический вопрос
+   */
+  /**
+   * Резюмирует весь разговор по задаче для генерации следующей задачи
+   * @param {Object} params - Параметры
+   * @param {Object} params.task - Задача
+   * @param {string} params.solution - Решение кандидата
+   * @param {Object} params.analysis - Анализ решения
+   * @param {Array} params.chatHistory - История разговора (все вопросы и ответы)
+   * @returns {string} Резюме разговора
+   */
+  async summarizeTaskConversation(params) {
+    const { task, solution, analysis, chatHistory } = params;
+
+    console.log(`\n📝 Резюмирование разговора по задаче: ${task.id}`);
+
+    const prompt = PROMPTS.summarizeTaskConversation(task, solution, analysis, chatHistory);
+
+    try {
+      const summary = await this.llmClient.chatDialogue([
+        {
+          role: 'system',
+          content: 'Ты технический интервьюер. Создай краткое резюме разговора по задаче на русском языке. Резюме должно помочь сгенерировать подходящую следующую задачу, учитывая все ответы кандидата и его реальный уровень понимания.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ], {
+        temperature: 0.5,
+        max_tokens: 800
+      });
+
+      console.log('✅ Резюме создано');
+      return summary.trim();
+    } catch (error) {
+      console.error('Ошибка при резюмировании:', error);
+      throw error;
+    }
+  }
+
+  async generateAdditionalTechnicalQuestion(params) {
+    const { task, solution, previousQuestion, previousAnswer, analysis, questionNumber } = params;
+
+    console.log(`\n💬 Генерация дополнительного технического вопроса для задачи ${questionNumber}`);
+
+    const prompt = PROMPTS.generateAdditionalTechnicalQuestion(
+      task, solution, previousQuestion, previousAnswer, analysis, questionNumber
+    );
+
+    try {
+      const question = await this.llmClient.chatDialogue([
+        {
+          role: 'system',
+          content: 'Ты технический интервьюер и общаешься ТОЛЬКО на русском языке. В этом ответе нельзя показывать ход рассуждений — никаких вступлений вроде "давайте посмотрим", "сначала я проверю" и т.п. Сформулируй сразу один КОНКРЕТНЫЙ ДОПОЛНИТЕЛЬНЫЙ ТЕХНИЧЕСКИЙ вопрос от первого лица, который проверяет ДРУГОЙ аспект решения (не тот, что был в предыдущем вопросе). Вопрос должен быть максимально конкретным и привязанным к деталям кода. Формат строго: одно или два предложения на русском языке, последние символы ответа — знак вопроса "?". Никаких списков, объяснений до или после вопроса, выводи только сам технический вопрос.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ], {
+        temperature: 0.6,
+        max_tokens: 250
+      });
+
+      return question;
+    } catch (error) {
+      console.error('Ошибка при генерации дополнительного технического вопроса:', error);
       throw error;
     }
   }
@@ -206,19 +401,56 @@ class SolutionAnalyzer {
       const question = await this.llmClient.chatDialogue([
         {
           role: 'system',
-          content: 'Ты проводишь финальное обсуждение интервью. Задавай значимые вопросы об опыте. Будь естественным и вовлекающим.'
+          content: 'Ты проводишь финальный этап интервью и общаешься ТОЛЬКО на русском языке. Все выводы и размышления делай про себя, но в ответе сразу выведи только 1–2 предложения на русском: краткий вывод о кандидате и один осмысленный вопрос о его опыте или дальнейших шагах, завершая текст вопросительным знаком "?". Не описывай, что ты сейчас анализируешь или какие шаги выполняешь, выводи только готовый вопрос/реплику для кандидата.'
         },
         {
           role: 'user',
           content: prompt
         }
       ], {
-        temperature: 0.8
+        temperature: 0.6,
+        max_tokens: 250
       });
 
       return question;
     } catch (error) {
       console.error('Ошибка при генерации финального вопроса:', error);
+      throw error;
+    }
+  }
+
+  async generateHint(params) {
+    const {
+      type = 'task',
+      task = {},
+      code = '',
+      question = '',
+      analysis = {},
+      chatHistory = []
+    } = params;
+
+    console.log(`\n💡 Генерация подсказки (${type})`);
+
+    const prompt = PROMPTS.generateHint({ type, task, code, question, analysis, chatHistory });
+
+    try {
+      const hint = await this.llmClient.chatDialogue([
+        {
+          role: 'system',
+          content: 'Ты наставник на техническом интервью. Дай короткую подсказку на русском языке, которая направляет кандидата, но не раскрывает полное решение.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ], {
+        temperature: 0.5,
+        max_tokens: 400
+      });
+
+      return hint.trim();
+    } catch (error) {
+      console.error('Ошибка при генерации подсказки:', error);
       throw error;
     }
   }
@@ -242,7 +474,7 @@ class SolutionAnalyzer {
       const response = await this.llmClient.chatDialogue([
         {
           role: 'system',
-          content: 'Ты ведешь естественный разговор с кандидатом. Будь вовлекающим и проницательным. Держи ответы краткими.'
+          content: 'Ты ведешь естественный диалог с кандидатом ТОЛЬКО на русском языке. Отвечай кратко (1–3 предложения), без перечислений и технических меток, используя живой, но профессиональный тон.'
         },
         {
           role: 'user',

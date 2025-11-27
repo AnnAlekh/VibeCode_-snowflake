@@ -17,7 +17,11 @@ class TaskGenerator {
       const response = await this.llmClient.generateTask([
         {
           role: 'system',
-          content: 'Создай задачу уровня ${level} по теме ${topic}. Верни ТОЛЬКО JSON.'
+          content: `Ты помощник‑интервьюер и общаешься ТОЛЬКО на русском языке. 
+Создай алгоритмическую задачу уровня ${level} по теме ${topic} на языке программирования ${language}. 
+Все текстовые поля (условие, требования, примеры, подсказки, описания тестов) должны быть на русском языке. 
+Структура и ключи JSON должны строго соответствовать примеру из запроса пользователя. 
+Верни ТОЛЬКО один валидный JSON‑объект без markdown, пояснений и лишнего текста.`
         },
         {
           role: 'user',
@@ -45,12 +49,22 @@ class TaskGenerator {
       topic = 'algorithms', 
       language = 'python',
       previousTask = null,
-      candidatePerformance = null
+      candidatePerformance = null,
+      conversationSummary = null
     } = params;
 
     console.log(`Generating ${level}-level task with streaming...`);
 
-    const prompt = PROMPTS.generateNextTask(level, topic, language, previousTask, candidatePerformance);
+    // Используем новый промпт с резюме или старый без резюме
+    const prompt = conversationSummary 
+        ? PROMPTS.generateNextTask(previousTask || {}, candidatePerformance || {}, conversationSummary)
+        : PROMPTS.generateNextTaskLegacy(
+            level,
+            topic,
+            language,
+            previousTask,
+            candidatePerformance
+          );
 
     let fullContent = '';
 
@@ -60,7 +74,12 @@ class TaskGenerator {
         [
           {
             role: 'system',
-            content: 'Создай задачу уровня ${level} по теме ${topic}. Верни ТОЛЬКО JSON.'
+            content: `Ты помощник‑интервьюер и общаешься ТОЛЬКО на русском языке. 
+Создай СЛЕДУЮЩУЮ алгоритмическую задачу уровня ${level} по теме ${topic} на языке программирования ${language}, 
+учитывая предыдущую задачу и результаты кандидата. 
+Все текстовые поля (условие, требования, примеры, подсказки, описания тестов) должны быть на русском языке. 
+Структура и ключи JSON должны строго соответствовать примеру из запроса пользователя. 
+Верни ТОЛЬКО один валидный JSON‑объект (без markdown и лишнего текста).`
           },
           {
             role: 'user',
@@ -147,6 +166,16 @@ class TaskGenerator {
       examples = [{ input: '', output: '', explanation: task.example }];
     }
 
+    const visibleTestCases =
+      Array.isArray(task.visibleTestCases) && task.visibleTestCases.length
+        ? task.visibleTestCases
+        : this.generateDefaultTestCases(task);
+
+    const hiddenTestCases =
+      Array.isArray(task.hiddenTestCases) && task.hiddenTestCases.length
+        ? task.hiddenTestCases
+        : this.generateHiddenTestCases(task, level);
+
     return {
       id: taskId,
       level,
@@ -156,8 +185,8 @@ class TaskGenerator {
       examples: examples,
       constraints: constraints,
       hints: task.hints || (task.hint ? [task.hint] : []),
-      visibleTestCases: task.visibleTestCases || this.generateDefaultTestCases(task),
-      hiddenTestCases: this.generateHiddenTestCases(task, level),
+      visibleTestCases,
+      hiddenTestCases,
       expectedComplexity: task.expectedComplexity || 'O(n)',
       estimatedTime: this.estimateTime(level),
       difficulty: task.difficulty || level,

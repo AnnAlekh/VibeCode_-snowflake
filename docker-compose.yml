@@ -1,0 +1,49 @@
+services:
+  backend:
+    build:
+      context: ./ai-interviewer
+      dockerfile: Dockerfile
+    container_name: ai-interviewer-backend
+    ports:
+      - "3001:3000"
+    environment:
+      - QWEN_API_KEY=${QWEN_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - QWEN_API_BASE=${QWEN_API_BASE:-}
+      - TASK_MODEL=${TASK_MODEL:-qwen3-coder-30b-a3b-instruct-fp8}
+      - STREAMING_MODEL=${STREAMING_MODEL:-qwen3-coder-30b-a3b-instruct-fp8}
+      - CHAT_MODEL=${CHAT_MODEL:-qwen3-coder-30b-a3b-instruct-fp8}
+      - ANALYSIS_MODEL=${ANALYSIS_MODEL:-qwen3-coder-30b-a3b-instruct-fp8}
+      - REPORT_MODEL=${REPORT_MODEL:-qwen3-coder-30b-a3b-instruct-fp8}
+      - NODE_ENV=production
+    volumes:
+      - ./ai-interviewer/src/data:/app/src/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/admin/overview"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./web-app
+      dockerfile: Dockerfile
+    container_name: ai-interviewer-frontend
+    ports:
+      - "8081:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  default:
+    name: ai-interviewer-network
+
