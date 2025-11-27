@@ -231,6 +231,3 @@ async function testAdaptiveSystem() {
 // Запуск теста
 testAdaptiveSystem();
 
-
-
-

@@ -5,11 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Interviewer Platform</title>
-    <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="styles.css?v=2.8">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <header class="header" id="header_active">
     <div class="header-left">
@@ -35,10 +31,7 @@
     <!-- Level Selector Screen -->
     <div id="level-selector" class="screen active">
         <div class="level-selector-container">
-            <div class="level-selector-top">
-                <h1>AI Interviewer Platform</h1>
-                <button class="admin-link" onclick="openAdminPanel()">Админ-панель</button>
-            </div>
+            <h1>🎯 AI Interviewer Platform</h1>
             <p class="subtitle">Выберите уровень собеседования</p>
             <div class="level-buttons">
                 <button class="level-btn" onclick="startInterview('Junior')">
@@ -67,74 +60,9 @@
 
         <!-- Status Notification -->
         <div class="status-notification" id="status-notification">
-            <span id="status-icon"></span>
+            <span id="status-icon">ℹ️</span>
             <span id="status-message"></span>
         </div>
-        <div id="model-retry-container" class="model-retry hidden"></div>
-        
-        <!-- Stage Indicator -->
-        <div class="stage-indicator" id="stage-indicator">
-            <div class="stage-title">Этапы интервью</div>
-            <div class="stage-item pending" id="stage-1">
-                <div class="stage-icon pending">1</div>
-                <div class="stage-text">
-                    <span>Генерация задачи</span>
-                    <span class="stage-duration" id="stage-1-time">-</span>
-                </div>
-            </div>
-            <div class="stage-item pending" id="stage-2">
-                <div class="stage-icon pending">2</div>
-                <div class="stage-text">
-                    <span>Решение задачи</span>
-                    <span class="stage-duration" id="stage-2-time">-</span>
-                </div>
-            </div>
-            <div class="stage-item pending" id="stage-3">
-                <div class="stage-icon pending">3</div>
-                <div class="stage-text">
-                    <span>Анализ решения</span>
-                    <span class="stage-duration" id="stage-3-time">-</span>
-                </div>
-            </div>
-            <div class="stage-item pending" id="stage-4">
-                <div class="stage-icon pending">4</div>
-                <div class="stage-text">
-                    <span>Вопрос интервьюера</span>
-                    <span class="stage-duration" id="stage-4-time">-</span>
-                </div>
-            </div>
-            <div class="stage-item pending" id="stage-5">
-                <div class="stage-icon pending">5</div>
-                <div class="stage-text">
-                    <span>Вторая задача</span>
-                    <span class="stage-duration" id="stage-5-time">-</span>
-                </div>
-            </div>
-            <div class="stage-item pending" id="stage-6">
-                <div class="stage-icon pending">6</div>
-                <div class="stage-text">
-                    <span>Финальный отчет</span>
-                    <span class="stage-duration" id="stage-6-time">-</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="header">
-            <div class="header-left">
-                <h1>AI Interviewer Platform</h1>
-                <span class="anti-cheat-status" id="anti-cheat-status" data-anticheat="enabled"></span>
-                <!-- Anti-cheat event handlers: copy, paste, blur, visibilitychange, keydown (DevTools) -->
-                <!-- Clipboard detection: document.addEventListener('copy'), document.addEventListener('paste') -->
-                <!-- Tab detection: window.addEventListener('blur'), document.addEventListener('visibilitychange') -->
-                <!-- DevTools detection: window.addEventListener('keydown') for F12, Ctrl+Shift+I/J/C -->
-            </div>
-            <div class="header-actions">
-                <button class="admin-link secondary" onclick="openAdminPanel()">Админ-панель</button>
-            </div>
-            <div class="metrics-bar">
-                <div class="metric">
-                    <span class="metric-label">Задач:</span>
-                    <span class="metric-value" id="tasks-count">0</span>
 
         <div class="container">
             <button class="btn" id="open-modal-btn">
@@ -199,71 +127,32 @@
         </div>
 
         <div class="main-content">
-            <!-- Left Panel: Task + IDE -->
-            <div class="left-panel">
-                <div class="panel-section">
-                    <div class="panel-header">
-                        <span>Задача</span>
-                        <span class="task-level" id="task-level">Junior</span>
-                    </div>
-                    <div class="task-view" id="task-view">
-                        <div class="loading">Загрузка задачи...</div>
-                    </div>
-                    <div class="hint-controls" id="hint-controls">
-                        <button class="btn ghost"
-                                type="button"
-                                id="task-hint-btn"
-                                onclick="requestHint('task')">
-                            Подсказка по задаче (2/2)
-                        </button>
-                        <button class="btn ghost"
-                                type="button"
-                                id="question-hint-btn"
-                                onclick="requestHint('question')">
-                            Подсказка по вопросу
-                        </button>
-                        <div class="hint-meta" id="hint-limit-meta">
-                            Доступно 2 подсказки на задачу
-                        </div>
-                    </div>
+    <!-- Left Panel: Task + IDE -->
+    <div class="left-panel">
+        <!-- Task Section -->
+        <div class="panel-section">
+            <div class="panel-header">
+                <span>📋 Задача</span>
+                <div class="panel-text">
+                    <span class="task-level" id="task-level">Junior</span>
+                    <select id="language-select" onchange="changeLanguage()">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="java">Java</option>
+                    </select>
                 </div>
-
-                <div class="panel-section">
-                    <div class="panel-header">
-                        <span>Редактор кода</span>
-                        <select id="language-select" onchange="changeLanguage()">
-                            <option value="python">Python</option>
-                            <option value="javascript">JavaScript</option>
-                            <option value="java">Java</option>
-                        </select>
-                    </div>
-                    <div class="ide-toolbar">
-                        <button class="btn btn-run" onclick="runCode()">
-                            Запустить тесты
-                        </button>
-                        <button class="btn btn-submit" onclick="submitSolution()">
-                            Отправить решение
-                        </button>
+            </div>
+            <div class="task-view" id="task-view">
+                <div class="loading">Загрузка задачи...</div>
+                <!-- Кастомный скроллбар для task-view -->
+                <div class="custom-scrollbar custom-scrollbar-vertical">
+                    <div class="scrollbar-track">
+                        <div class="scrollbar-thumb"></div>
                     </div>
                 </div>
                 <div class="custom-scrollbar custom-scrollbar-horizontal">
                     <div class="scrollbar-track">
                         <div class="scrollbar-thumb"></div>
-                    </div>
-                </div>
-
-                <div class="panel-section runtime-panel">
-                    <div class="panel-header">
-                        <span>Исполнение</span>
-                    </div>
-                    <div class="runtime-controls">
-                        <label for="runtime-input">Входные данные</label>
-                        <textarea id="runtime-input" placeholder="Пример: 1 2 3" rows="3"></textarea>
-                        <div class="runtime-actions">
-                            <button class="btn btn-run" type="button" onclick="executeManualRun()">Запустить</button>
-                            <span class="runtime-status" id="runtime-status"></span>
-                        </div>
-                        <pre class="runtime-output" id="runtime-output">Вывод появится здесь</pre>
                     </div>
                 </div>
             </div>
@@ -289,75 +178,7 @@
                         <div class="scrollbar-track">
                             <div class="scrollbar-thumb"></div>
                         </div>
-                        <button class="scroll-to-bottom-btn" id="scroll-to-bottom-btn" onclick="scrollChatToBottom()" title="Прокрутить вниз">
-                            Вниз
-                        </button>
-                        <div class="chat-input-container">
-                            <input type="text" 
-                                   class="chat-input" 
-                                   id="chat-input" 
-                                   placeholder="Введите ваш ответ..." 
-                                   onkeypress="handleChatKeyPress(event)">
-                            <button class="btn btn-send" onclick="sendMessage()">Отправить</button>
-                        </div>
                     </div>
-                </div>
-                <div class="panel-section insights-section">
-                    <div class="panel-header">
-                        <span>Личные метрики</span>
-                    </div>
-                    <div class="candidate-insights-grid">
-                        <div class="insight-card">
-                            <div class="insight-card-title">Прогресс интервью</div>
-                            <div class="insight-progress">
-                                <div class="insight-progress-fill" id="candidate-stage-progress-bar"></div>
-                            </div>
-                            <div class="insight-progress-meta">
-                                <span id="candidate-stage-progress-label">0/6 этапов</span>
-                                <span id="candidate-stage-current">Текущий этап: —</span>
-                            </div>
-                        </div>
-                        <div class="insight-card">
-                            <div class="insight-card-title">Результаты тестов</div>
-                            <div class="insight-stats">
-                                <div>
-                                    <strong id="candidate-tests-total">—</strong>
-                                    <span>Всего</span>
-                                </div>
-                                <div>
-                                    <strong id="candidate-tests-visible">—</strong>
-                                    <span>Видимые</span>
-                                </div>
-                                <div>
-                                    <strong id="candidate-tests-hidden">—</strong>
-                                    <span>Скрытые</span>
-                                </div>
-                            </div>
-                            <div class="insight-subtext" id="candidate-tests-message">Запустите тесты, чтобы увидеть статистику</div>
-                            <div class="insight-subtext" id="candidate-hints-used">Подсказки использованы: 0</div>
-                        </div>
-                        <div class="insight-card">
-                            <div class="insight-card-title">История интервью</div>
-                            <div class="insight-history">
-                                <div>
-                                    <span>Средний балл</span>
-                                    <strong id="candidate-history-average">—</strong>
-                                </div>
-                                <div>
-                                    <span>Лучший результат</span>
-                                    <strong id="candidate-history-best">—</strong>
-                                </div>
-                                <div>
-                                    <span>Динамика</span>
-                                    <strong id="candidate-history-trend">—</strong>
-                                </div>
-                            </div>
-                            <ul class="insight-history-list" id="candidate-history-list">
-                                <li>История появится после завершения интервью</li>
-                            </ul>
-                        </div>
-                    </div>
-                    <!--</div>
                     <div class="custom-scrollbar custom-scrollbar-horizontal">
                         <div class="scrollbar-track">
                             <div class="scrollbar-thumb"></div>
@@ -371,7 +192,7 @@
                 <div class="chat-input-container">
                     <input type="text" class="chat-input" id="chat-input" placeholder="Введите ваш ответ..."
                         onkeypress="handleChatKeyPress(event)">
-                    <button class="btn btn-send" onclick="sendMessage()">Отправить</button> --!>
+                    <button class="btn btn-send" onclick="sendMessage()">Отправить</button>
                 </div>
             </div>
         </div>
@@ -403,333 +224,9 @@
             </div>
         </div>
 
-    <!-- Admin Panel Screen -->
-    <div id="admin-panel" class="screen">
-        <div class="admin-panel-container">
-            <div class="admin-panel-header">
-                <div>
-                    <div class="breadcrumbs">AI Interviewer • Admin</div>
-                    <h1>Админ-панель</h1>
-                    <div class="admin-sync-status">Еще не синхронизировано</div>
-                </div>
-                <div class="admin-panel-actions">
-                    <button class="btn ghost" onclick="returnToCandidate()">Режим кандидата</button>
-                    <button class="btn btn-submit" onclick="syncAdminState()">Синхронизировать</button>
-                </div>
-            </div>
-
-            <div class="admin-grid">
-                <section class="admin-section column-span-2">
-                    <div class="section-header">
-                        <div>
-                            <h2>Банк задач</h2>
-                            <p>Фильтруйте, редактируйте и добавляйте задачи для разных уровней.</p>
-                        </div>
-                        <div class="filters">
-                            <select id="task-level-filter" onchange="handleTaskFilterChange()">
-                                <option value="all">Все уровни</option>
-                                <option value="Junior">Junior</option>
-                                <option value="Middle">Middle</option>
-                                <option value="Senior">Senior</option>
-                            </select>
-                            <select id="task-topic-filter" onchange="handleTaskFilterChange()">
-                                <option value="all">Все темы</option>
-                                <option value="algorithms">Algorithms</option>
-                                <option value="system-design">System Design</option>
-                                <option value="databases">Databases</option>
-                            </select>
-                            <input type="search" id="task-search" placeholder="Поиск задачи" oninput="handleTaskFilterChange()">
-                        </div>
-                    </div>
-                    <div class="task-table-wrapper">
-                        <table class="task-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Название</th>
-                                    <th>Уровень</th>
-                                    <th>Тема</th>
-                                    <th>Последнее обновление</th>
-                                    <th>Видимость</th>
-                                    <th>Действия</th>
-                                </tr>
-                            </thead>
-                            <tbody id="task-table-body"></tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <section class="admin-section">
-                    <div class="section-header">
-                        <div>
-                            <h2 id="task-form-title">Новая задача</h2>
-                            <p>Добавьте задачу в банк и привяжите к уровню и теме.</p>
-                        </div>
-                    </div>
-                    <form id="new-task-form" onsubmit="handleNewTask(event)" class="form-grid">
-                        <input type="hidden" name="taskId" id="task-id-field">
-                        <label>
-                            Название
-                            <input type="text" name="title" placeholder="Например, Баланс скобок" required>
-                        </label>
-                        <label class="full-row">
-                            Описание
-                            <textarea name="description" rows="3" placeholder="Краткое условие задачи" required></textarea>
-                        </label>
-                        <label>
-                            Уровень
-                            <select name="level" required>
-                                <option>Junior</option>
-                                <option>Middle</option>
-                                <option>Senior</option>
-                            </select>
-                        </label>
-                        <label>
-                            Тема
-                            <select name="topic" required>
-                                <option value="algorithms">Algorithms</option>
-                                <option value="system-design">System Design</option>
-                                <option value="databases">Databases</option>
-                            </select>
-                        </label>
-                        <label>
-                            Теги
-                            <input type="text" name="tags" placeholder="stack, dfs, strings">
-                        </label>
-                        <label>
-                            Видимость
-                            <select name="visibility">
-                                <option value="public">Public</option>
-                                <option value="private">Private</option>
-                                <option value="draft">Draft</option>
-                            </select>
-                        </label>
-                        <div class="form-actions full-row">
-                            <button class="btn btn-submit" type="submit" id="task-form-submit">Сохранить задачу</button>
-                            <button class="btn ghost" type="button" id="task-form-cancel" onclick="cancelTaskEdit()">Отмена</button>
-                        </div>
-                    </form>
-                </section>
-
-                <section class="admin-section">
-                    <div class="section-header">
-                        <div>
-                            <h2>Настройки интервью</h2>
-                            <p>Определите длительность, модели и метрики.</p>
-                        </div>
-                    </div>
-                    <form id="interview-settings-form" onsubmit="saveInterviewSettings(event)" class="form-grid">
-                        <label>
-                            Длительность (мин)
-                            <input type="number" name="duration" min="15" max="120" required>
-                        </label>
-                        <label>
-                            Макс. задач
-                            <input type="number" name="maxTasks" min="1" max="5" required>
-                        </label>
-                        <label>
-                            Модель
-                            <select name="model">
-                                <option value="qwen3-coder-30b-a3b-instruct-fp8">Qwen3 Coder 30B</option>
-                                <option value="qwen-plus">Qwen Plus</option>
-                                <option value="gpt-4o-mini">GPT-4o mini</option>
-                            </select>
-                        </label>
-                        <label>
-                            Температура
-                            <input type="number" name="temperature" min="0" max="1" step="0.1">
-                        </label>
-                        <div class="toggle-group full-row">
-                            <label class="toggle">
-                                <input type="checkbox" name="metricsTechnical">
-                                <span>Техническая оценка</span>
-                            </label>
-                            <label class="toggle">
-                                <input type="checkbox" name="metricsCommunication">
-                                <span>Коммуникации</span>
-                            </label>
-                            <label class="toggle">
-                                <input type="checkbox" name="metricsReadability">
-                                <span>Читаемость кода</span>
-                            </label>
-                        </div>
-                        <div class="toggle-group full-row">
-                            <label class="toggle">
-                                <input type="checkbox" name="antiCheatEnabled" id="antiCheatEnabled" onchange="handleAntiCheatToggle()">
-                                <span>Включить античит</span>
-                            </label>
-                        </div>
-                        <div class="toggle-group full-row">
-                            <label class="toggle">
-                                <input type="checkbox" name="antiCheatClipboard">
-                                <span>Анализ буфера обмена</span>
-                            </label>
-                            <label class="toggle">
-                                <input type="checkbox" name="antiCheatDevtools">
-                                <span>Детект DevTools</span>
-                            </label>
-                            <label class="toggle">
-                                <input type="checkbox" name="antiCheatExtensions">
-                                <span>Браузерные расширения</span>
-                            </label>
-                        </div>
-                        <button class="btn btn-submit full-row" type="submit">Сохранить настройки</button>
-                    </form>
-                </section>
-
-                <section class="admin-section column-span-2">
-                    <div class="section-header">
-                        <div>
-                            <h2>Активные интервью</h2>
-                            <p>Следите за прогрессом кандидатов в реальном времени.</p>
-                        </div>
-                        <button class="btn ghost" onclick="refreshSessions()">Обновить</button>
-                    </div>
-                    <div class="session-grid" id="session-grid"></div>
-                </section>
-                <section class="admin-section column-span-2 analytics-section">
-                    <div class="section-header">
-                        <div>
-                            <h2>Метрики потока кандидатов</h2>
-                            <p>Сводка по качеству решений, скорости и безопасности.</p>
-                        </div>
-                        <button class="btn ghost" onclick="refreshAdminAnalytics()">Обновить метрики</button>
-                    </div>
-                    <div class="analytics-grid">
-                        <div class="analytics-card">
-                            <div class="analytics-label">Средний балл</div>
-                            <div class="analytics-value" id="admin-metric-avg-score">--</div>
-                            <div class="analytics-subtext" id="admin-metric-score-trend">Нет данных</div>
-                        </div>
-                        <div class="analytics-card">
-                            <div class="analytics-label">Проходной %</div>
-                            <div class="analytics-value" id="admin-metric-pass-rate">--</div>
-                            <div class="analytics-subtext">Approved / всего</div>
-                        </div>
-                        <div class="analytics-card">
-                            <div class="analytics-label">Время решения</div>
-                            <div class="analytics-value" id="admin-metric-time">--</div>
-                            <div class="analytics-subtext">Среднее по кандидатам</div>
-                        </div>
-                        <div class="analytics-card">
-                            <div class="analytics-label">Активные сессии</div>
-                            <div class="analytics-value" id="admin-metric-active">0/0</div>
-                            <div class="analytics-subtext">В процессе / всего</div>
-                        </div>
-                    </div>
-                    <div class="analytics-lists">
-                        <div class="analytics-list">
-                            <h3>Распределение уровней</h3>
-                            <ul id="admin-level-distribution">
-                                <li>Нет данных</li>
-                            </ul>
-                        </div>
-                        <div class="analytics-list">
-                            <h3>Статусы рекомендаций</h3>
-                            <p id="admin-status-breakdown">Нет данных</p>
-                        </div>
-                        <div class="analytics-list">
-                            <h3>Античит-инциденты</h3>
-                            <div id="admin-anti-cheat-summary">Инциденты отсутствуют</div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="admin-section column-span-2">
-                    <div class="section-header">
-                        <div>
-                            <h2>Результаты кандидатов</h2>
-                            <p>Финальные баллы, попытки и экспорт отчетов.</p>
-                        </div>
-                        <div class="filters">
-                            <select id="candidate-filter" onchange="renderCandidateResults()">
-                                <option value="all">Все статусы</option>
-                                <option value="review">На проверке</option>
-                                <option value="approved">Одобрено</option>
-                                <option value="rejected">Отклонено</option>
-                            </select>
-                            <button class="btn btn-run" onclick="downloadAdminReport('csv')">CSV</button>
-                            <button class="btn btn-run" onclick="downloadAdminReport('json')">JSON</button>
-                        </div>
-                    </div>
-                    <div class="results-table-wrapper">
-                        <table class="results-table">
-                            <thead>
-                                <tr>
-                                    <th>Кандидат</th>
-                                    <th>Уровень</th>
-                                    <th>Итог</th>
-                                    <th>Техника</th>
-                                    <th>Коммуникации</th>
-                                    <th>Попытки</th>
-                                    <th>Время</th>
-                                    <th>Статус</th>
-                                </tr>
-                            </thead>
-                            <tbody id="candidate-table-body"></tbody>
-                        </table>
-                    </div>
-                </section>
-
-                <section class="admin-section column-span-2">
-                    <div class="section-header">
-                        <div>
-                            <h2>Отчет по метрикам</h2>
-                            <p>Средние баллы, распределение по уровням и статусам.</p>
-                        </div>
-                        <button class="btn ghost" onclick="refreshCandidateMetricsReport()">Обновить</button>
-                    </div>
-                    <div class="metrics-report" id="candidate-metrics-report"></div>
-                </section>
-
-                <section class="admin-section column-span-2">
-                    <div class="section-header">
-                        <div>
-                            <h2>Протокол прозрачности</h2>
-                            <p>Полный журнал действий, рассуждений и внутренних оценок.</p>
-                        </div>
-                        <div class="filters">
-                            <button class="btn ghost" onclick="refreshTransparencyProtocol()">Обновить</button>
-                            <button class="btn btn-run" onclick="downloadTransparencyProtocol()">Скачать протокол</button>
-                        </div>
-                    </div>
-                    <div class="protocol-container" id="transparency-protocol"></div>
-                </section>
-
-                <section class="admin-section column-span-2">
-                    <div class="section-header">
-                        <div>
-                            <h2>События античита</h2>
-                            <p>Последние зафиксированные действия на клиенте</p>
-                        </div>
-                    </div>
-                    <div class="anti-cheat-list" id="anti-cheat-events"></div>
-                </section>
-
-                <section class="admin-section column-span-2">
-                    <div class="section-header">
-                        <div>
-                            <h2>Системные логи</h2>
-                            <p>Все действия и события системы в реальном времени</p>
-                        </div>
-                        <div class="filters">
-                            <button class="btn btn-run" onclick="downloadSystemLogs('json')">Экспорт JSON</button>
-                            <button class="btn btn-run" onclick="downloadSystemLogs('text')">Экспорт TXT</button>
-                            <button class="btn ghost" onclick="clearSystemLogs()">Очистить</button>
-                            <button class="btn ghost" onclick="showLogStats()">Статистика</button>
-                        </div>
-                    </div>
-                    <div class="log-viewer-container">
-                        <div class="log-viewer" id="log-viewer-content"></div>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </div>
-
         <!-- Monaco Editor -->
         <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
-        <script type="module" src="app.js?v=2.9"></script>
+        <script src="app.js"></script>
         <script src="modal.js"></script>
         <script src="scrollbar.js"></script>
         <script src="anti-cheat-demo.js"></script>
