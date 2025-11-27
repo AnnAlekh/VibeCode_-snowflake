@@ -67,7 +67,7 @@ class LLMClient {
   async chat(messages, options = {}) {
     const model = options.model || this.models.chat;
     const temperature = options.temperature ?? this.defaultTemperature;
-    const maxTokens = options.max_tokens || options.maxTokens || 300; // Уменьшено для ускорения
+    const maxTokens = options.max_tokens || options.maxTokens || 800; // Увеличено для полноты ответа
     
     try {
       const response = await this.client.chat.completions.create({
@@ -122,7 +122,7 @@ class LLMClient {
   async chatJSON(messages, options = {}) {
     const model = options.model || this.models.taskGeneration;
     const temperature = options.temperature ?? this.defaultTemperature;
-    const maxTokens = options.max_tokens || options.maxTokens || 600; // Оптимизировано для задач
+    const maxTokens = options.max_tokens || options.maxTokens || 800; // Увеличено для полноты JSON-ответа
     
     try {
       const requestOptions = {
@@ -170,7 +170,7 @@ class LLMClient {
               ...messages,
               {
                 role: 'system',
-                content: 'Extract only valid JSON from the previous response. Return only JSON, no other text.'
+                content: 'Извлеки только валидный JSON из предыдущего ответа. Верни ТОЛЬКО один JSON‑объект без какого‑либо дополнительного текста, пояснений или markdown.'
               }
             ],
             temperature: 0.1
@@ -198,7 +198,7 @@ class LLMClient {
     return this.chatJSON(messages, {
       model: this.models.codeAnalysis,
       temperature: 0.3,
-      max_tokens: options.max_tokens || options.maxTokens || 400, // Уменьшено для анализа
+      max_tokens: options.max_tokens || options.maxTokens || 800, // Увеличено для детального анализа
       ...options
     });
   }
@@ -207,7 +207,7 @@ class LLMClient {
     return this.chatJSON(messages, {
       model: this.models.report,
       temperature: 0.5,
-      max_tokens: options.max_tokens || options.maxTokens || 500, // Уменьшено для отчетов
+      max_tokens: options.max_tokens || options.maxTokens || 900, // Увеличено для подробных отчетов
       ...options
     });
   }
@@ -216,7 +216,7 @@ class LLMClient {
     return this.chat(messages, {
       model: this.models.chat,
       temperature: 0.8,
-      max_tokens: options.max_tokens || options.maxTokens || 200, // Уменьшено для диалога
+      max_tokens: options.max_tokens || options.maxTokens || 800, // Увеличено для полноты диалога
       ...options
     });
   }

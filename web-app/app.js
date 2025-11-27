@@ -14,7 +14,125 @@ let interviewState = {
     stage: 'level-selection',
     stageDurations: {},
     editor: null,
-    timerInterval: null
+    timerInterval: null,
+    antiCheatEnabled: true,
+    additionalQuestionsCount: 0, // Счетчик дополнительных вопросов для текущей задачи
+    maxAdditionalQuestions: 3 // Максимальное количество дополнительных вопросов
+};
+
+const adminDefaults = {
+    tasks: [
+        {
+            id: 'ALG-101',
+            title: 'Сумма массива',
+            description: 'Прочитайте из стандартного ввода числа через пробел и выведите сумму всех элементов.',
+            level: 'Junior',
+            topic: 'algorithms',
+            updated: '2025-11-26',
+            visibility: 'public',
+            tags: ['arrays', 'math'],
+            visibleTestCases: [
+                { input: '1 2 3 4\n', output: '10' },
+                { input: '10 -5 7\n', output: '12' }
+            ],
+            hiddenTestCases: [
+                { input: '100 200 300\n', output: '600' },
+                { input: '0 0 0 0 0\n', output: '0' }
+            ]
+        },
+        {
+            id: 'DSN-204',
+            title: 'Кеширование новостной ленты',
+            description: 'Спроектируйте сервис кеширования ленты новостей для миллионов пользователей.',
+            level: 'Middle',
+            topic: 'system-design',
+            updated: '2025-11-25',
+            visibility: 'private',
+            tags: ['cache', 'architecture']
+        },
+        {
+            id: 'DB-310',
+            title: 'Нормализация схемы',
+            description: 'Приведите схему БД к 3НФ, сохранив целостность данных.',
+            level: 'Senior',
+            topic: 'databases',
+            updated: '2025-11-18',
+            visibility: 'public',
+            tags: ['sql', 'normalization']
+        },
+        {
+            id: 'ALG-155',
+            title: 'Баланс скобок',
+            description: 'Получите строку со скобками и выведите YES, если последовательность корректна, иначе NO.',
+            level: 'Junior',
+            topic: 'algorithms',
+            updated: '2025-11-26',
+            visibility: 'public',
+            tags: ['stack', 'strings'],
+            visibleTestCases: [
+                { input: '()[]{}\n', output: 'YES' },
+                { input: '([)]\n', output: 'NO' }
+            ],
+            hiddenTestCases: [
+                { input: '(((())))\n', output: 'YES' },
+                { input: '((())\n', output: 'NO' }
+            ]
+        }
+    ],
+    sessions: [
+        { id: 'INT-8721', candidate: 'Иван Петров', level: 'Junior', status: 'active', progress: 65, started: '10:24', timeSpent: '18 мин' },
+        { id: 'INT-8722', candidate: 'Мария Смирнова', level: 'Middle', status: 'awaiting', progress: 5, started: '10:40', timeSpent: '-' },
+        { id: 'INT-8723', candidate: 'Дмитрий Орлов', level: 'Senior', status: 'active', progress: 32, started: '10:05', timeSpent: '41 мин' }
+    ],
+    candidates: [
+        { id: 'CND-001', name: 'Иван Петров', level: 'Junior', overall: 78, technical: 80, communication: 72, attempts: 1, time: '38 мин', status: 'review' },
+        { id: 'CND-002', name: 'Мария Смирнова', level: 'Middle', overall: 86, technical: 90, communication: 80, attempts: 1, time: '42 мин', status: 'approved' },
+        { id: 'CND-003', name: 'Дмитрий Орлов', level: 'Senior', overall: 61, technical: 58, communication: 65, attempts: 2, time: '55 мин', status: 'review' },
+        { id: 'CND-004', name: 'Сергей Соколов', level: 'Middle', overall: 49, technical: 45, communication: 52, attempts: 2, time: '60 мин', status: 'rejected' }
+    ],
+    settings: {
+        duration: 45,
+        maxTasks: 2,
+        model: 'qwen3-coder-30b-a3b-instruct-fp8',
+        temperature: 0.2,
+        metrics: {
+            technical: true,
+            communication: true,
+            readability: true
+        },
+        antiCheat: {
+            clipboard: true,
+            devtools: true,
+            extensions: false
+        }
+    },
+    stats: {
+        totalInterviews: 143,
+        avgScore: 74,
+        approvalRate: 32
+    },
+    reports: [],
+    antiCheatEvents: []
+};
+
+const adminState = {
+    filters: {
+        level: 'all',
+        topic: 'all',
+        search: ''
+    },
+    tasks: [],
+    sessions: [],
+    candidates: [],
+    settings: null,
+    stats: null,
+    reports: [],
+    antiCheatEvents: [],
+    loading: false,
+    error: null,
+    lastSync: null,
+    taskFormMode: 'create',
+    editingTaskId: null
 };
 
 const API_BASE = 'http://localhost:3000/api';
@@ -33,16 +151,96 @@ require(['vs/editor/editor.main'], function () {
 });
 
 document.getElementById('welcome-time').textContent = new Date().toLocaleTimeString();
+
+function setActiveScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(screen => {
+        if (screen.id === screenId) {
+            screen.classList.add('active');
+        } else {
+            screen.classList.remove('active');
+        }
+    });
+
+    const hideChrome = screenId === 'admin-panel';
+    document.querySelector('.progress-bar-container')?.classList.toggle('hidden', hideChrome);
+    document.getElementById('status-notification')?.classList.toggle('hidden', hideChrome);
+    document.getElementById('stage-indicator')?.classList.toggle('hidden', hideChrome);
+}
+
+function openAdminPanel() {
+    setActiveScreen('admin-panel');
+    if (!adminState.tasks.length && !adminState.loading) {
+        loadAdminData();
+    } else {
+        renderAdminPanel();
+    }
+}
+
+function returnToCandidate() {
+    if (interviewState.currentLevel) {
+        setActiveScreen('interview-screen');
+    } else {
+        setActiveScreen('level-selector');
+    }
+}
+
+function syncAdminState() {
+    loadAdminData(true);
+}
+
+async function loadAdminData(force = false) {
+    if (adminState.loading && !force) {
+        return;
+    }
+
+    adminState.loading = true;
+    adminState.error = null;
+    renderAdminPanel();
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/overview`, { cache: 'no-store' });
+        if (!response.ok) {
+            throw new Error(`Ошибка загрузки админ-данных: ${response.status}`);
+        }
+        const data = await response.json();
+        adminState.tasks = data.tasks || [];
+        adminState.sessions = data.sessions || [];
+        adminState.candidates = data.candidates || [];
+        adminState.settings = data.settings || adminDefaults.settings;
+        adminState.stats = data.stats || adminDefaults.stats;
+        adminState.reports = data.reports || [];
+        adminState.antiCheatEvents = data.antiCheatEvents || adminDefaults.antiCheatEvents;
+        adminState.lastSync = new Date().toISOString();
+        showNotification('Данные админ-панели синхронизированы', 'success');
+    } catch (error) {
+        console.error(error);
+        adminState.error = error.message;
+        if (!adminState.tasks.length) {
+            adminState.tasks = adminDefaults.tasks;
+            adminState.sessions = adminDefaults.sessions;
+            adminState.candidates = adminDefaults.candidates;
+            adminState.settings = adminDefaults.settings;
+            adminState.stats = adminDefaults.stats;
+            adminState.reports = adminDefaults.reports;
+            adminState.antiCheatEvents = adminDefaults.antiCheatEvents;
+        }
+        showNotification('Не удалось получить данные админ-панели. Используются локальные данные.', 'warning');
+    } finally {
+        adminState.loading = false;
+        renderAdminPanel();
+    }
+}
+
 async function startInterview(level) {
     interviewState.currentLevel = level;
+    interviewState.additionalQuestionsCount = 0; // Сбрасываем счетчик вопросов
     interviewState.stage = 'interview';
     interviewState.metrics.startTime = Date.now();
     interviewState.metrics.pausedTime = 0;
     interviewState.metrics.lastPauseStart = null;
 
     // Переключение экранов
-    document.getElementById('level-selector').classList.remove('active');
-    document.getElementById('interview-screen').classList.add('active');
+    setActiveScreen('interview-screen');
 
     startTimer();
     updateMetrics();
@@ -105,7 +303,7 @@ function displayTask(task) {
     }
 
     if (task.requirements && task.requirements.length > 0) {
-        html += '<div style="margin-top: 20px;"><h3 style="color: #4ec9b0; margin-bottom: 10px; font-size: 16px;">📋 Требования:</h3><ul style="margin-left: 20px; line-height: 1.8;">';
+        html += '<div style="margin-top: 20px;"><h3 style="color: #4ec9b0; margin-bottom: 10px; font-size: 16px;">Требования:</h3><ul style="margin-left: 20px; line-height: 1.8;">';
         task.requirements.forEach(req => {
             html += `<li style="margin: 10px 0; padding-left: 5px;">${escapeHtml(req)}</li>`;
         });
@@ -115,14 +313,14 @@ function displayTask(task) {
     if (task.example) {
         html += `
             <div class="task-examples" style="margin-top: 20px;">
-                <h3 style="color: #4ec9b0; margin-bottom: 15px; font-size: 16px;">💡 Пример:</h3>
+                <h3 style="color: #4ec9b0; margin-bottom: 15px; font-size: 16px;">Пример:</h3>
                 <div class="example">
                     <div class="code-block">${escapeHtml(task.example)}</div>
                 </div>
             </div>
         `;
     } else if (task.examples && task.examples.length > 0) {
-        html += '<div class="task-examples" style="margin-top: 20px;"><h3 style="color: #4ec9b0; margin-bottom: 15px; font-size: 16px;">💡 Примеры:</h3>';
+        html += '<div class="task-examples" style="margin-top: 20px;"><h3 style="color: #4ec9b0; margin-bottom: 15px; font-size: 16px;">Примеры:</h3>';
         task.examples.forEach((example, i) => {
             html += `
                 <div class="example">
@@ -139,12 +337,12 @@ function displayTask(task) {
     if (task.hint) {
         html += `
             <div style="margin-top: 20px; padding: 15px; background: #252526; border-left: 4px solid #4ec9b0; border-radius: 4px;">
-                <h3 style="color: #4ec9b0; margin-bottom: 10px; font-size: 16px;">💡 Подсказка:</h3>
+                <h3 style="color: #4ec9b0; margin-bottom: 10px; font-size: 16px;">Подсказка:</h3>
                 <div style="line-height: 1.6;">${escapeHtml(task.hint)}</div>
             </div>
         `;
     } else if (task.hints && task.hints.length > 0) {
-        html += '<div style="margin-top: 20px;"><h3 style="color: #4ec9b0; margin-bottom: 10px; font-size: 16px;">💡 Подсказки:</h3><ul style="margin-left: 20px;">';
+        html += '<div style="margin-top: 20px;"><h3 style="color: #4ec9b0; margin-bottom: 10px; font-size: 16px;">Подсказки:</h3><ul style="margin-left: 20px;">';
         task.hints.forEach(hint => {
             html += `<li style="margin: 8px 0; line-height: 1.6;">${escapeHtml(hint)}</li>`;
         });
@@ -152,7 +350,7 @@ function displayTask(task) {
     }
 
     if (task.constraints && task.constraints.length > 0) {
-        html += '<div style="margin-top: 20px;"><h3 style="color: #4ec9b0; margin-bottom: 10px; font-size: 16px;">📋 Ограничения:</h3><ul style="margin-left: 20px; line-height: 1.8;">';
+        html += '<div style="margin-top: 20px;"><h3 style="color: #4ec9b0; margin-bottom: 10px; font-size: 16px;">Ограничения:</h3><ul style="margin-left: 20px; line-height: 1.8;">';
         task.constraints.forEach(constraint => {
             html += `<li style="margin: 10px 0; padding-left: 5px;">${escapeHtml(constraint)}</li>`;
         });
@@ -162,13 +360,26 @@ function displayTask(task) {
     if (task.starterCode) {
         html += `
             <div style="margin-top: 20px;">
-                <h3 style="color: #4ec9b0; margin-bottom: 10px; font-size: 16px;">📝 Шаблон кода:</h3>
+                <h3 style="color: #4ec9b0; margin-bottom: 10px; font-size: 16px;">Шаблон кода:</h3>
                 <div class="code-block" style="white-space: pre-wrap; font-family: 'Courier New', monospace;">${escapeHtml(task.starterCode)}</div>
             </div>
         `;
     }
 
     container.innerHTML = html;
+
+    // Если у задачи есть видимые тесты, подставляем первый пример во входные данные исполнителя
+    try {
+        const runtimeInput = document.getElementById('runtime-input');
+        if (runtimeInput && Array.isArray(task.visibleTestCases) && task.visibleTestCases.length > 0) {
+            const firstCase = task.visibleTestCases[0];
+            if (firstCase && typeof firstCase.input === 'string') {
+                runtimeInput.value = firstCase.input;
+            }
+        }
+    } catch (e) {
+        console.error('Failed to prefill runtime input from visibleTestCases', e);
+    }
 }
 
 // Запуск кода
@@ -194,9 +405,10 @@ async function runCode() {
         const results = await response.json();
         displayTestResults(results);
         
-        const allPassed = results.visible.every(t => t.passed);
+        const visibleCases = Array.isArray(results.visible) ? results.visible : [];
+        const allPassed = visibleCases.length && visibleCases.every(t => t.passed);
         if (allPassed) {
-            showNotification('Все видимые тесты пройдены! ✓', 'success');
+            showNotification('Все видимые тесты пройдены!', 'success');
         } else {
             showNotification('Некоторые тесты не пройдены', 'warning');
         }
@@ -209,20 +421,31 @@ async function runCode() {
 // Отображение результатов тестов
 function displayTestResults(results) {
     const container = document.getElementById('task-view');
-    let testHtml = '<div class="test-results"><h3 style="color: #4ec9b0; margin-bottom: 15px;">✅ Результаты тестов:</h3>';
+    if (!container) return;
 
-    if (results.visible) {
+    if (results && results.message) {
+        container.innerHTML += `<div class="test-results">${escapeHtml(results.message)}</div>`;
+        return;
+    }
+
+    let testHtml = '<div class="test-results"><h3 style="color: #4ec9b0; margin-bottom: 15px;">Результаты тестов:</h3>';
+
+    if (results.visible && results.visible.length) {
         results.visible.forEach((test, i) => {
             testHtml += `
                 <div class="test-item">
-                    <div class="test-icon ${test.passed ? 'passed' : 'failed'}">${test.passed ? '✓' : '✗'}</div>
+                    <div class="test-icon ${test.passed ? 'passed' : 'failed'}">${test.passed ? 'OK' : 'X'}</div>
                     <div>
                         <div>Тест ${i + 1}: ${test.passed ? 'Пройден' : 'Не пройден'}</div>
+                        ${typeof test.executionTime === 'number' ? `<div class="test-meta">Время: ${(test.executionTime / 1000).toFixed(2)} c</div>` : ''}
+                        ${test.actual ? `<div class="test-meta">Вывод: ${escapeHtml(test.actual)}</div>` : ''}
                         ${test.error ? `<div style="color: #ce9178; font-size: 12px; margin-top: 3px;">${escapeHtml(test.error)}</div>` : ''}
                     </div>
                 </div>
             `;
         });
+    } else {
+        testHtml += '<div class="test-meta">Видимые тесты отсутствуют.</div>';
     }
 
     testHtml += '</div>';
@@ -230,6 +453,54 @@ function displayTestResults(results) {
     // Добавляем результаты к задаче
     const existing = container.innerHTML;
     container.innerHTML = existing + testHtml;
+}
+
+async function executeManualRun() {
+    if (!interviewState.editor) return;
+    const code = interviewState.editor.getValue();
+    if (!code.trim()) {
+        showNotification('Введите код перед запуском', 'warning');
+        return;
+    }
+    const language = document.getElementById('language-select').value;
+    const input = document.getElementById('runtime-input').value;
+    const statusEl = document.getElementById('runtime-status');
+    const outputEl = document.getElementById('runtime-output');
+
+    if (statusEl) statusEl.textContent = 'Выполнение...';
+    if (outputEl) outputEl.textContent = '';
+
+    try {
+        const response = await fetch(`${API_BASE}/runtime/run`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, language, input })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+            throw new Error(result.error || 'Не удалось выполнить код');
+        }
+
+        if (outputEl) {
+            const stdout = result.stdout || '';
+            const stderr = result.stderr ? `\nstderr:\n${result.stderr}` : '';
+            outputEl.textContent = `${stdout}${stderr}`.trim() || 'Вывода нет';
+        }
+
+        if (statusEl) {
+            const timeInfo = typeof result.executionTime === 'number'
+                ? `Время: ${(result.executionTime / 1000).toFixed(2)} c`
+                : '';
+            statusEl.textContent = result.timedOut
+                ? `${timeInfo} (превышен лимит)`
+                : timeInfo;
+        }
+    } catch (error) {
+        console.error('Manual run failed', error);
+        if (statusEl) statusEl.textContent = 'Ошибка';
+        if (outputEl) outputEl.textContent = error.message;
+    }
 }
 
 async function submitSolution() {
@@ -254,8 +525,10 @@ async function submitSolution() {
         const testResults = await testResponse.json();
 
         // Если видимые тесты прошли, но скрытые упали - анализируем ошибку
-        const visiblePassed = testResults.visible.every(t => t.passed);
-        const hiddenPassed = testResults.hidden.every(t => t.passed);
+        const visibleCases = Array.isArray(testResults.visible) ? testResults.visible : [];
+        const hiddenCases = Array.isArray(testResults.hidden) ? testResults.hidden : [];
+        const visiblePassed = visibleCases.length ? visibleCases.every(t => t.passed) : false;
+        const hiddenPassed = hiddenCases.length ? hiddenCases.every(t => t.passed) : false;
 
         if (visiblePassed && !hiddenPassed) {
             showNotification('Обнаружена ошибка в скрытых тестах', 'warning');
@@ -265,13 +538,13 @@ async function submitSolution() {
                 body: JSON.stringify({
                     code: code,
                     task: interviewState.currentTask,
-                    failedTests: testResults.hidden.filter(t => !t.passed),
+                    failedTests: hiddenCases.filter(t => !t.passed),
                     visiblePassed: true
                 })
             });
 
             const errorAnalysis = await errorResponse.json();
-            addChatMessage('assistant', `🔍 Анализ ошибки:\n\n${errorAnalysis.explanation}\n\n💡 Подсказка: ${errorAnalysis.suggestedFix}`);
+            addChatMessage('assistant', `Анализ ошибки:\n\n${errorAnalysis.explanation}\n\nПодсказка: ${errorAnalysis.suggestedFix}`);
             updateStage(3, 'active');
             return;
         }
@@ -305,12 +578,15 @@ async function submitSolution() {
         showNotification('Решение проанализировано!', 'success');
 
         if (interviewState.metrics.tasksCount === 1) {
+            // После первой задачи: показываем античит и задаем вопрос
+            await showAntiCheatDemo();
             updateStage(4, 'active');
             await askFollowUpQuestion(analysis);
         } else {
             if (interviewState.metrics.tasksCount === 2) {
-                await showAntiCheatDemo();
-                await startFinalDialogue();
+                // После второй задачи: задаем технический вопрос
+                updateStage(4, 'active');
+                await askTechnicalFollowUpQuestion(analysis);
             }
         }
     } catch (error) {
@@ -345,30 +621,31 @@ async function askFollowUpQuestion(analysis) {
 
         updateStage(4, 'completed', generationTime);
         
-        // Очищаем вопрос от размышлений - берем только последний вопрос
         let question = data.question || '';
-        
-        // Убираем reasoning блоки
-        question = question.replace(/<think>[\s\S]*?<\/redacted_reasoning>/gi, '');
-        question = question.replace(/<\/redacted_reasoning>[\s\S]*?<think>/gi, '');
-        
-        // Если есть несколько предложений, берем только последний вопрос
-        const questions = question.split(/[.!?]\s+/).filter(s => s.includes('?'));
-        if (questions.length > 0) {
-            question = questions[questions.length - 1].trim();
-            if (!question.endsWith('?')) {
-                question += '?';
+        if (!question.trim()) {
+            question = 'Какова временная сложность вашего решения и почему вы выбрали именно этот подход?';
+        } else {
+            const raw = question.replace(/\s+/g, ' ').trim();
+            const parts = raw.split('?');
+            const candidates = [];
+            for (let i = 0; i < parts.length - 1; i++) {
+                let segment = (parts[i] + '?').trim();
+                const lastDot = segment.lastIndexOf('.');
+                if (lastDot !== -1 && lastDot < segment.length - 1) {
+                    segment = segment.slice(lastDot + 1).trim();
+                }
+                if (segment) {
+                    candidates.push(segment);
+                }
             }
-        }
-        
-        // Если вопрос начинается с размышлений, обрезаем до первого вопроса
-        const firstQuestionIndex = question.indexOf('?');
-        if (firstQuestionIndex > 100) {
-            // Если до первого вопроса больше 100 символов, ищем последний вопрос
-            const lastQuestionIndex = question.lastIndexOf('?');
-            if (lastQuestionIndex > 0) {
-                question = question.substring(question.lastIndexOf('.', lastQuestionIndex - 50) + 1).trim();
-            }
+
+            // Берем последнюю короткую русскоязычную фразу-вопрос;
+            // если русской нет, лучше fallback на заготовленный русский технический вопрос,
+            // чем показывать английский.
+            const ruQuestion = [...candidates].reverse().find(
+                s => /[А-Яа-яЁё]/.test(s) && s.endsWith('?') && s.length <= 250
+            );
+            question = ruQuestion || 'Какова временная сложность вашего решения и почему вы выбрали именно этот подход?';
         }
         
         addChatMessage('assistant', question, generationTime);
@@ -379,11 +656,205 @@ async function askFollowUpQuestion(analysis) {
     }
 }
 
+// Дополнительный технический вопрос (если ответ был недостаточен)
+async function askAdditionalTechnicalQuestion(taskNumber, previousEvaluation) {
+    try {
+        showNotification('Генерация дополнительного технического вопроса...', 'info');
+        updateStage(4, 'active');
+        
+        // Получаем предыдущий вопрос и ответ
+        const previousQuestion = interviewState.chatHistory
+            .filter(m => m.role === 'assistant')
+            .slice(-1)[0]?.content || '';
+        const previousAnswer = interviewState.chatHistory
+            .filter(m => m.role === 'user')
+            .slice(-1)[0]?.content || '';
+        
+        const analysis = interviewState.taskHistory[interviewState.taskHistory.length - 1]?.analysis || {};
+        
+        const { result: data, duration: generationTime } = await withLLM(async () => {
+            const response = await fetch(`${API_BASE}/chat/additional-question`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task: interviewState.currentTask,
+                    solution: interviewState.editor.getValue(),
+                    previousQuestion: previousQuestion,
+                    previousAnswer: previousAnswer,
+                    analysis: analysis,
+                    questionNumber: taskNumber
+                })
+            });
+    
+            if (!response.ok) {
+                throw new Error('Failed to generate additional question');
+            }
+    
+            return await response.json();
+        });
+
+        updateStage(4, 'completed', generationTime);
+        
+        let question = data.question || '';
+        if (!question.trim()) {
+            question = taskNumber === 1 
+                ? 'Как ваш алгоритм обрабатывает граничные случаи, например, пустой массив?'
+                : 'Какие альтернативные структуры данных вы могли бы использовать для оптимизации этого решения?';
+        } else {
+            const raw = question.replace(/\s+/g, ' ').trim();
+            const parts = raw.split('?');
+            const candidates = [];
+            for (let i = 0; i < parts.length - 1; i++) {
+                let segment = (parts[i] + '?').trim();
+                const lastDot = segment.lastIndexOf('.');
+                if (lastDot !== -1 && lastDot < segment.length - 1) {
+                    segment = segment.slice(lastDot + 1).trim();
+                }
+                if (segment) {
+                    candidates.push(segment);
+                }
+            }
+
+            const ruQuestion = [...candidates].reverse().find(
+                s => /[А-Яа-яЁё]/.test(s) && s.endsWith('?') && s.length <= 300
+            );
+            question = ruQuestion || (taskNumber === 1 
+                ? 'Как ваш алгоритм обрабатывает граничные случаи, например, пустой массив?'
+                : 'Какие альтернативные структуры данных вы могли бы использовать для оптимизации этого решения?');
+        }
+        
+        addChatMessage('assistant', question, generationTime);
+        showNotification('Дополнительный технический вопрос задан! Ответьте в чате', 'info');
+    } catch (error) {
+        console.error('Error generating additional question:', error);
+        showNotification('Ошибка при генерации дополнительного вопроса', 'error');
+    }
+}
+
+// Обработка ответа на дополнительный технический вопрос
+async function handleAdditionalAnswer(answer, taskNumber) {
+    try {
+        // Отслеживание античита при ответе
+        reportAntiCheatEvent('answer-submitted', { taskNumber: taskNumber, questionType: 'additional-technical' });
+        
+        showNotification('Оценка вашего ответа на дополнительный вопрос...', 'info');
+        updateStage(3, 'active');
+
+        const { result: evaluation, duration: evaluationTime } = await withLLM(async () => {
+            const evalResponse = await fetch(`${API_BASE}/chat/evaluate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: interviewState.chatHistory[interviewState.chatHistory.length - 2].content,
+                    answer: answer,
+                    solution: interviewState.editor.getValue()
+                })
+            });
+
+            if (!evalResponse.ok) {
+                throw new Error(`HTTP error! status: ${evalResponse.status}`);
+            }
+
+            return await evalResponse.json();
+        });
+
+        console.log('Additional answer evaluation result:', evaluation);
+        updateStage(3, 'completed', evaluationTime);
+
+        if (evaluation.feedback) {
+            addChatMessage('assistant', evaluation.feedback, evaluationTime);
+        }
+
+        // Проверяем, нужно ли задать еще один дополнительный вопрос
+        if (!evaluation.isSufficient && interviewState.additionalQuestionsCount < interviewState.maxAdditionalQuestions) {
+            // Еще можно задать дополнительный вопрос
+            interviewState.additionalQuestionsCount++;
+            await askAdditionalTechnicalQuestion(taskNumber, evaluation);
+        } else if (taskNumber === 1) {
+            // Для первой задачи - резюмируем и переходим ко второй задаче
+            await summarizeAndGenerateNextTask(evaluation);
+        } else {
+            // Для второй задачи - показываем античит и финальный диалог
+            await showAntiCheatDemo();
+            await startFinalDialogue();
+        }
+    } catch (error) {
+        console.error('Error handling additional answer:', error);
+        showNotification('Ошибка при обработке ответа', 'error');
+        addChatMessage('assistant', 'Произошла ошибка. Попробуйте еще раз.');
+    }
+}
+
+// Технический вопрос после второй задачи
+async function askTechnicalFollowUpQuestion(analysis) {
+    try {
+        showNotification('Генерация технического вопроса...', 'info');
+        updateStage(4, 'active');
+        
+        const { result: data, duration: generationTime } = await withLLM(async () => {
+            const response = await fetch(`${API_BASE}/chat/technical-question`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task: interviewState.currentTask,
+                    solution: interviewState.editor.getValue(),
+                    testResults: { 
+                        allPassed: true,
+                        visible: interviewState.taskHistory[interviewState.taskHistory.length - 1]?.testResults?.visible || [],
+                        hidden: interviewState.taskHistory[interviewState.taskHistory.length - 1]?.testResults?.hidden || []
+                    },
+                    analysis: analysis
+                })
+            });
+    
+            if (!response.ok) {
+                throw new Error('Failed to generate technical question');
+            }
+    
+            return await response.json();
+        });
+
+        updateStage(4, 'completed', generationTime);
+        
+        let question = data.question || '';
+        if (!question.trim()) {
+            question = 'Какова временная и пространственная сложность вашего решения?';
+        } else {
+            const raw = question.replace(/\s+/g, ' ').trim();
+            const parts = raw.split('?');
+            const candidates = [];
+            for (let i = 0; i < parts.length - 1; i++) {
+                let segment = (parts[i] + '?').trim();
+                const lastDot = segment.lastIndexOf('.');
+                if (lastDot !== -1 && lastDot < segment.length - 1) {
+                    segment = segment.slice(lastDot + 1).trim();
+                }
+                if (segment) {
+                    candidates.push(segment);
+                }
+            }
+
+            // Берем последнюю короткую русскоязычную фразу-вопрос;
+            const ruQuestion = [...candidates].reverse().find(
+                s => /[А-Яа-яЁё]/.test(s) && s.endsWith('?') && s.length <= 300
+            );
+            question = ruQuestion || 'Какова временная и пространственная сложность вашего решения?';
+        }
+        
+        addChatMessage('assistant', question, generationTime);
+        showNotification('Технический вопрос задан! Ответьте в чате', 'info');
+    } catch (error) {
+        console.error('Error generating technical question:', error);
+        showNotification('Ошибка при генерации технического вопроса', 'error');
+    }
+}
+
 // Обработка ответа кандидата
 async function handleCandidateAnswer(answer) {
-    addChatMessage('user', answer);
-
     try {
+        // Отслеживание античита при ответе
+        reportAntiCheatEvent('answer-submitted', { taskNumber: 1, questionType: 'follow-up' });
+        
         showNotification('Оценка вашего ответа...', 'info');
         updateStage(3, 'active');
 
@@ -412,11 +883,22 @@ async function handleCandidateAnswer(answer) {
             addChatMessage('assistant', evaluation.feedback, evaluationTime);
         }
 
-        const nextLevel = determineNextLevel(evaluation);
-        console.log('Next level determined:', nextLevel, 'based on evaluation:', evaluation);
+        // Проверяем, достаточен ли ответ для определения уровня
+        const isSufficient = evaluation.isSufficient !== undefined 
+            ? evaluation.isSufficient 
+            : (evaluation.understanding >= 70 && evaluation.communication >= 70 && evaluation.score >= 70);
 
-        // Генерация следующей задачи с адаптацией
-        await generateNextTask(evaluation, nextLevel);
+        // Проверяем, нужно ли задать дополнительный вопрос (максимум 3)
+        if (!isSufficient && interviewState.additionalQuestionsCount < interviewState.maxAdditionalQuestions) {
+            // Ответ недостаточен и еще можно задать вопрос
+            console.log(`Ответ недостаточен, задаем дополнительный вопрос (${interviewState.additionalQuestionsCount + 1}/${interviewState.maxAdditionalQuestions})`);
+            interviewState.additionalQuestionsCount++;
+            updateStage(4, 'active');
+            await askAdditionalTechnicalQuestion(1, evaluation);
+        } else {
+            // Ответ достаточен или достигнут лимит вопросов - резюмируем и переходим к следующей задаче
+            await summarizeAndGenerateNextTask(evaluation);
+        }
     } catch (error) {
         console.error('Error handling answer:', error);
         showNotification('Ошибка при обработке ответа', 'error');
@@ -424,8 +906,239 @@ async function handleCandidateAnswer(answer) {
     }
 }
 
+// Обработка ответа на технический вопрос после второй задачи
+async function handleTechnicalAnswer(answer) {
+    try {
+        // Отслеживание античита при ответе
+        reportAntiCheatEvent('answer-submitted', { taskNumber: 2, questionType: 'technical' });
+        
+        showNotification('Оценка вашего технического ответа...', 'info');
+        updateStage(3, 'active');
+
+        const { result: evaluation, duration: evaluationTime } = await withLLM(async () => {
+            const evalResponse = await fetch(`${API_BASE}/chat/evaluate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: interviewState.chatHistory[interviewState.chatHistory.length - 2].content,
+                    answer: answer,
+                    solution: interviewState.editor.getValue()
+                })
+            });
+
+            if (!evalResponse.ok) {
+                throw new Error(`HTTP error! status: ${evalResponse.status}`);
+            }
+
+            return await evalResponse.json();
+        });
+
+        console.log('Technical evaluation result:', evaluation);
+        updateStage(3, 'completed', evaluationTime);
+
+        if (evaluation.feedback) {
+            addChatMessage('assistant', evaluation.feedback, evaluationTime);
+        }
+
+        // Проверяем, достаточен ли ответ для определения уровня
+        const isSufficient = evaluation.isSufficient !== undefined 
+            ? evaluation.isSufficient 
+            : (evaluation.understanding >= 70 && evaluation.communication >= 70 && evaluation.score >= 70);
+
+        // Проверяем, нужно ли задать дополнительный вопрос (максимум 3)
+        if (!isSufficient && interviewState.additionalQuestionsCount < interviewState.maxAdditionalQuestions) {
+            // Ответ недостаточен и еще можно задать вопрос
+            console.log(`Ответ на технический вопрос недостаточен, задаем дополнительный вопрос (${interviewState.additionalQuestionsCount + 1}/${interviewState.maxAdditionalQuestions})`);
+            interviewState.additionalQuestionsCount++;
+            updateStage(4, 'active');
+            await askAdditionalTechnicalQuestion(2, evaluation);
+        } else {
+            // Ответ достаточен или достигнут лимит вопросов - задаем третий завершающий вопрос
+            updateStage(4, 'active');
+            await askThirdQuestion(interviewState.taskHistory[interviewState.taskHistory.length - 1]?.analysis || evaluation);
+        }
+    } catch (error) {
+        console.error('Error handling technical answer:', error);
+        showNotification('Ошибка при обработке ответа', 'error');
+        addChatMessage('assistant', 'Произошла ошибка. Попробуйте еще раз.');
+    }
+}
+
+// Третий завершающий вопрос после второй задачи
+async function askThirdQuestion(analysis) {
+    try {
+        showNotification('Генерация завершающего вопроса...', 'info');
+        updateStage(4, 'active');
+        
+        // Получаем предыдущий ответ кандидата
+        const previousAnswer = interviewState.chatHistory
+            .filter(m => m.role === 'user')
+            .pop()?.content || '';
+        
+        const { result: data, duration: generationTime } = await withLLM(async () => {
+            const response = await fetch(`${API_BASE}/chat/third-question`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task: interviewState.currentTask,
+                    solution: interviewState.editor.getValue(),
+                    previousAnswer: previousAnswer,
+                    analysis: analysis
+                })
+            });
+    
+            if (!response.ok) {
+                throw new Error('Failed to generate third question');
+            }
+    
+            return await response.json();
+        });
+
+        updateStage(4, 'completed', generationTime);
+        
+        let question = data.question || '';
+        if (!question.trim()) {
+            question = 'Как бы вы улучшили это решение для работы с большими объемами данных?';
+        } else {
+            const raw = question.replace(/\s+/g, ' ').trim();
+            const parts = raw.split('?');
+            const candidates = [];
+            for (let i = 0; i < parts.length - 1; i++) {
+                let segment = (parts[i] + '?').trim();
+                const lastDot = segment.lastIndexOf('.');
+                if (lastDot !== -1 && lastDot < segment.length - 1) {
+                    segment = segment.slice(lastDot + 1).trim();
+                }
+                if (segment) {
+                    candidates.push(segment);
+                }
+            }
+
+            // Берем последнюю короткую русскоязычную фразу-вопрос;
+            const ruQuestion = [...candidates].reverse().find(
+                s => /[А-Яа-яЁё]/.test(s) && s.endsWith('?') && s.length <= 300
+            );
+            question = ruQuestion || 'Как бы вы улучшили это решение для работы с большими объемами данных?';
+        }
+        
+        addChatMessage('assistant', question, generationTime);
+        showNotification('Завершающий вопрос задан! Ответьте в чате', 'info');
+    } catch (error) {
+        console.error('Error generating third question:', error);
+        showNotification('Ошибка при генерации завершающего вопроса', 'error');
+    }
+}
+
+// Обработка ответа на третий завершающий вопрос
+async function handleThirdAnswer(answer) {
+    try {
+        // Отслеживание античита при ответе
+        reportAntiCheatEvent('answer-submitted', { taskNumber: 2, questionType: 'final' });
+        
+        showNotification('Оценка вашего завершающего ответа...', 'info');
+        updateStage(3, 'active');
+
+        const { result: evaluation, duration: evaluationTime } = await withLLM(async () => {
+            const evalResponse = await fetch(`${API_BASE}/chat/evaluate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: interviewState.chatHistory[interviewState.chatHistory.length - 2].content,
+                    answer: answer,
+                    solution: interviewState.editor.getValue()
+                })
+            });
+
+            if (!evalResponse.ok) {
+                throw new Error(`HTTP error! status: ${evalResponse.status}`);
+            }
+
+            return await evalResponse.json();
+        });
+
+        console.log('Third question evaluation result:', evaluation);
+        updateStage(3, 'completed', evaluationTime);
+
+        if (evaluation.feedback) {
+            addChatMessage('assistant', evaluation.feedback, evaluationTime);
+        }
+
+        // Проверяем, достаточен ли ответ для определения уровня
+        const isSufficient = evaluation.isSufficient !== undefined 
+            ? evaluation.isSufficient 
+            : (evaluation.understanding >= 70 && evaluation.communication >= 70 && evaluation.score >= 70);
+
+        // Проверяем, нужно ли задать дополнительный вопрос (максимум 3)
+        if (!isSufficient && interviewState.additionalQuestionsCount < interviewState.maxAdditionalQuestions) {
+            // Ответ недостаточен и еще можно задать вопрос
+            console.log(`Ответ на третий вопрос недостаточен, задаем дополнительный вопрос (${interviewState.additionalQuestionsCount + 1}/${interviewState.maxAdditionalQuestions})`);
+            interviewState.additionalQuestionsCount++;
+            updateStage(4, 'active');
+            await askAdditionalTechnicalQuestion(2, evaluation);
+        } else {
+            // Ответ достаточен или достигнут лимит вопросов - показываем античит и финальный диалог
+            await showAntiCheatDemo();
+            await startFinalDialogue();
+        }
+    } catch (error) {
+        console.error('Error handling third answer:', error);
+        showNotification('Ошибка при обработке ответа', 'error');
+        addChatMessage('assistant', 'Произошла ошибка. Попробуйте еще раз.');
+    }
+}
+
+// Резюмирование разговора и генерация следующей задачи
+async function summarizeAndGenerateNextTask(evaluation) {
+    try {
+        showNotification('Резюмирование разговора по первой задаче...', 'info');
+        addChatMessage('assistant', 'Резюмирую наш разговор по первой задаче для генерации второй задачи...');
+        
+        // Получаем историю разговора по первой задаче (все вопросы и ответы)
+        const taskChatHistory = interviewState.chatHistory.filter(msg => 
+            msg.role === 'assistant' || msg.role === 'user'
+        );
+        
+        const analysis = interviewState.taskHistory[interviewState.taskHistory.length - 1]?.analysis || {};
+        
+        // Резюмируем разговор
+        const { result: summaryData, duration: summaryTime } = await withLLM(async () => {
+            const summaryResponse = await fetch(`${API_BASE}/chat/summarize`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    task: interviewState.currentTask,
+                    solution: interviewState.editor.getValue(),
+                    analysis: analysis,
+                    chatHistory: taskChatHistory
+                })
+            });
+            
+            if (!summaryResponse.ok) {
+                throw new Error(`HTTP error! status: ${summaryResponse.status}`);
+            }
+            
+            return await summaryResponse.json();
+        });
+        
+        console.log('Conversation summary:', summaryData.summary);
+        console.log('Summary length:', taskChatHistory.length, 'messages');
+        
+        // Определяем уровень для следующей задачи
+        const nextLevel = determineNextLevel(evaluation);
+        console.log('Next level determined:', nextLevel, 'based on evaluation:', evaluation);
+        
+        // Генерируем следующую задачу с учетом резюме
+        await generateNextTask(evaluation, nextLevel, summaryData.summary);
+    } catch (error) {
+        console.error('Error summarizing conversation:', error);
+        // В случае ошибки резюмирования просто генерируем задачу без резюме
+        const nextLevel = determineNextLevel(evaluation);
+        await generateNextTask(evaluation, nextLevel);
+    }
+}
+
 // Генерация следующей задачи
-async function generateNextTask(evaluation, nextLevel = null) {
+async function generateNextTask(evaluation, nextLevel = null, conversationSummary = null) {
     updateStage(4, 'completed');
     updateStage(5, 'active');
     updateProgress(70);
@@ -436,7 +1149,13 @@ async function generateNextTask(evaluation, nextLevel = null) {
         nextLevel = determineNextLevel(evaluation);
     }
     
+    // Сбрасываем счетчик дополнительных вопросов для новой задачи
+    interviewState.additionalQuestionsCount = 0;
+    
     console.log('Generating next task with level:', nextLevel);
+    if (conversationSummary) {
+        console.log('Using conversation summary for task generation');
+    }
     
     addChatMessage('assistant', `Отлично! На основе вашего ответа я подобрал задачу уровня ${nextLevel}. Генерирую задачу...`);
 
@@ -462,7 +1181,8 @@ async function generateNextTask(evaluation, nextLevel = null) {
                         timeSpent: interviewState.metrics.timeSpent,
                         attempts: 1,
                         trend: evaluation.score >= 85 ? 'improving' : (evaluation.score >= 70 ? 'stable' : 'declining')
-                    }
+                    },
+                    conversationSummary: conversationSummary || null
                 })
             });
 
@@ -511,11 +1231,22 @@ async function generateNextTask(evaluation, nextLevel = null) {
         });
 
         interviewState.currentTask = task;
+        interviewState.metrics.tasksCount = 2; // Устанавливаем счетчик задач в 2
         displayTask(task);
         updateStage(5, 'completed', generationTime);
         updateProgress(80);
         showNotification(`Задача уровня ${nextLevel} сгенерирована!`, 'success');
         addChatMessage('assistant', `Задача уровня ${nextLevel} сгенерирована! Приступайте к решению.`, generationTime);
+        
+        // Сохраняем задачу в историю
+        interviewState.taskHistory.push({
+            task: task,
+            level: nextLevel,
+            timestamp: Date.now()
+        });
+        
+        // После генерации второй задачи ждем, пока кандидат решит её
+        // Вопрос будет задан после отправки решения (в submitSolution)
     } catch (error) {
         console.error('Error in streaming:', error);
         showNotification('Ошибка при генерации задачи', 'error');
@@ -523,38 +1254,66 @@ async function generateNextTask(evaluation, nextLevel = null) {
     }
 }
 
-// Определение следующего уровня
+// Определение следующего уровня с учетом стартового выбора кандидата
 function determineNextLevel(evaluation) {
-    // Используем оценку из evaluation или общую оценку
-    const score = evaluation.score || evaluation.overallScore || 0;
-    const understanding = evaluation.understanding || 0;
-    const communication = evaluation.communication || 0;
-    
-    // Комбинированная оценка
-    const combinedScore = (score + understanding + communication) / 3;
-    
-    console.log('Determining level:', { score, understanding, communication, combinedScore });
-    
-    if (combinedScore >= 85) {
-        return 'Middle';
-    } else if (combinedScore >= 70) {
-        return 'Junior+';
-    } else if (combinedScore >= 50) {
-        return 'Junior';
+    // Оценки из LLM
+    const score = evaluation.score ?? evaluation.overallScore ?? 0;
+    const understanding = evaluation.understanding ?? 0;
+    const communication = evaluation.communication ?? 0;
+
+    // Взвешенная комбинированная оценка: больше веса технике
+    const combinedScore = Math.round(
+        score * 0.6 +
+        understanding * 0.25 +
+        communication * 0.15
+    );
+
+    const levelOrder = ['Junior-', 'Junior', 'Junior+', 'Middle', 'Middle+', 'Senior'];
+
+    // Уровень, выбранный кандидатом на старте, используется как нижняя граница
+    const baseLevel = interviewState.currentLevel || 'Junior';
+    let baseIndex = levelOrder.indexOf(baseLevel);
+    if (baseIndex === -1) {
+        baseIndex = levelOrder.indexOf('Junior');
     }
-    return 'Junior-';
+
+    let targetIndex = baseIndex;
+
+    // При высоких оценках уровень растет, но никогда не падает ниже стартового
+    if (combinedScore >= 85) {
+        // Сильный результат — можно поднять на 2 шага, но не выше максимума
+        targetIndex = Math.min(baseIndex + 2, levelOrder.length - 1);
+    } else if (combinedScore >= 70) {
+        // Нормальный/уверенный результат — поднимаем на 1 шаг
+        targetIndex = Math.min(baseIndex + 1, levelOrder.length - 1);
+    } else {
+        // Низкий результат — уровень не понижаем, оставляем как есть
+        targetIndex = baseIndex;
+    }
+
+    const nextLevel = levelOrder[targetIndex];
+    console.log('Determining level:', {
+        score,
+        understanding,
+        communication,
+        combinedScore,
+        baseLevel,
+        nextLevel
+    });
+
+    return nextLevel;
 }
 
 // Демонстрация античита
 async function showAntiCheatDemo() {
-    addChatMessage('assistant', '🔒 Демонстрация системы защиты от читерства:');
+    addChatMessage('assistant', 'Демонстрация системы защиты от читерства:');
     
     const demoMessages = [
-        '🔍 Обнаружено копирование кода из буфера обмена',
-        '⚠️ Обнаружено открытие DevTools',
-        '📑 Обнаружено переключение вкладок',
-        '⏸️ Обнаружен период бездействия',
-        '⚡ Обнаружены множественные вставки кода'
+        'Обнаружено копирование кода из буфера обмена',
+        'Обнаружено открытие DevTools',
+        'Обнаружено переключение вкладок',
+        'Обнаружен период бездействия',
+        'Обнаружены множественные вставки кода'
     ];
 
     for (const msg of demoMessages) {
@@ -586,18 +1345,28 @@ async function startFinalDialogue() {
             return await response.json();
         });
         
-        // Очищаем вопрос от reasoning
         let question = data.question || '';
-        question = question.replace(/<think>[\s\S]*?<\/redacted_reasoning>/gi, '');
-        question = question.replace(/<\/redacted_reasoning>[\s\S]*?<think>/gi, '');
-        
-        // Берем только последний вопрос
-        const questions = question.split(/[.!?]\s+/).filter(s => s.includes('?'));
-        if (questions.length > 0) {
-            question = questions[questions.length - 1].trim();
-            if (!question.endsWith('?')) {
-                question += '?';
+        if (!question.trim()) {
+            question = 'Есть ли что-то, что вы хотели бы добавить перед завершением интервью?';
+        } else {
+            const raw = question.replace(/\s+/g, ' ').trim();
+            const parts = raw.split('?');
+            const candidates = [];
+            for (let i = 0; i < parts.length - 1; i++) {
+                let segment = (parts[i] + '?').trim();
+                const lastDot = segment.lastIndexOf('.');
+                if (lastDot !== -1 && lastDot < segment.length - 1) {
+                    segment = segment.slice(lastDot + 1).trim();
+                }
+                if (segment) {
+                    candidates.push(segment);
+                }
             }
+
+            const ruQuestion = [...candidates].reverse().find(
+                s => /[А-Яа-яЁё]/.test(s) && s.endsWith('?') && s.length <= 250
+            );
+            question = ruQuestion || 'Есть ли что-то, что вы хотели бы добавить перед завершением интервью?';
         }
         
         addChatMessage('assistant', question, generationTime);
@@ -628,16 +1397,77 @@ async function sendMessage() {
 
     try {
         // Обработка ответа
-        // Проверяем, что это ответ на вопрос после первой задачи
+        // Проверяем, что это ответ на вопрос после первой или второй задачи
         const lastAssistantMessage = interviewState.chatHistory.filter(m => m.role === 'assistant').pop();
         const isAnswerToFirstQuestion = interviewState.metrics.tasksCount === 1 && 
                                          interviewState.chatHistory.length >= 2 &&
                                          lastAssistantMessage && 
                                          lastAssistantMessage.content.includes('?');
         
+        // Для второй задачи: находим индекс сообщения о генерации второй задачи
+        // и считаем вопросы после него
+        let questionsAfterSecondTask = 0;
+        if (interviewState.metrics.tasksCount === 2) {
+            const secondTaskMessageIndex = interviewState.chatHistory.findIndex(m => 
+                m.role === 'assistant' && 
+                (m.content.includes('Задача уровня') && m.content.includes('сгенерирована'))
+            );
+            
+            if (secondTaskMessageIndex >= 0) {
+                // Считаем вопросы после сообщения о генерации второй задачи
+                questionsAfterSecondTask = interviewState.chatHistory
+                    .slice(secondTaskMessageIndex + 1)
+                    .filter(m => m.role === 'assistant' && m.content.includes('?')).length;
+            } else {
+                // Fallback: считаем все вопросы после первой задачи
+                const firstTaskEndIndex = interviewState.chatHistory.findIndex(m => 
+                    m.role === 'assistant' && m.content.includes('Генерирую задачу')
+                );
+                if (firstTaskEndIndex >= 0) {
+                    questionsAfterSecondTask = interviewState.chatHistory
+                        .slice(firstTaskEndIndex + 1)
+                        .filter(m => m.role === 'assistant' && m.content.includes('?')).length;
+                }
+            }
+        }
+        
+        // Проверяем, является ли это ответом на дополнительный вопрос
+        // Дополнительный вопрос задается после того, как был задан основной вопрос и ответ был недостаточен
+        const allQuestions = interviewState.chatHistory.filter(m => m.role === 'assistant' && m.content.includes('?'));
+        const isAnswerToAdditionalQuestion = lastAssistantMessage && 
+                                              lastAssistantMessage.content.includes('?') &&
+                                              (lastAssistantMessage.content.toLowerCase().includes('дополнительный') || 
+                                               (interviewState.metrics.tasksCount === 1 && allQuestions.length > 1) ||
+                                               (interviewState.metrics.tasksCount === 2 && questionsAfterSecondTask > 2));
+        
+        const isAnswerToTechnicalQuestion = interviewState.metrics.tasksCount === 2 && 
+                                             interviewState.chatHistory.length >= 2 &&
+                                             lastAssistantMessage && 
+                                             lastAssistantMessage.content.includes('?') &&
+                                             questionsAfterSecondTask === 1 && 
+                                             !isAnswerToAdditionalQuestion; // Первый вопрос после второй задачи
+        const isAnswerToThirdQuestion = interviewState.metrics.tasksCount === 2 && 
+                                         interviewState.chatHistory.length >= 2 &&
+                                         lastAssistantMessage && 
+                                         lastAssistantMessage.content.includes('?') &&
+                                         questionsAfterSecondTask === 2 &&
+                                         !isAnswerToAdditionalQuestion; // Второй вопрос после второй задачи
+        
         if (isAnswerToFirstQuestion) {
             // Ответ на вопрос после первой задачи
             await handleCandidateAnswer(message);
+        } else if (isAnswerToAdditionalQuestion && interviewState.metrics.tasksCount === 1) {
+            // Ответ на дополнительный вопрос после первой задачи
+            await handleAdditionalAnswer(message, 1);
+        } else if (isAnswerToTechnicalQuestion) {
+            // Ответ на технический вопрос после второй задачи
+            await handleTechnicalAnswer(message);
+        } else if (isAnswerToAdditionalQuestion && interviewState.metrics.tasksCount === 2) {
+            // Ответ на дополнительный вопрос после второй задачи
+            await handleAdditionalAnswer(message, 2);
+        } else if (isAnswerToThirdQuestion) {
+            // Ответ на третий завершающий вопрос после второй задачи
+            await handleThirdAnswer(message);
         } else if (interviewState.metrics.tasksCount === 2) {
         // Финальный диалог
         try {
@@ -704,37 +1534,15 @@ function handleChatKeyPress(event) {
 
 // Добавление сообщения в чат
 function addChatMessage(role, content, generationTime = null) {
-    // Убираем размышления сети (reasoning) - оставляем только вопрос
-    let cleanContent = content;
-    
-    // Удаляем блоки с reasoning
-    cleanContent = cleanContent.replace(/<think>[\s\S]*?<\/redacted_reasoning>/gi, '');
-    cleanContent = cleanContent.replace(/<\/redacted_reasoning>[\s\S]*?<think>/gi, '');
-    cleanContent = cleanContent.replace(/reasoning[:\s]*[\s\S]*?(?=\n\n|\n[А-Я]|$)/gi, '');
-    
-    // Убираем длинные размышления перед вопросом
-    const questionMatch = cleanContent.match(/([А-Я][^.!?]*[.!?])/);
-    if (questionMatch && cleanContent.length > 200) {
-        // Если текст очень длинный, ищем последний вопрос
-        const sentences = cleanContent.split(/[.!?]\s+/);
-        const lastQuestion = sentences.filter(s => s.length > 20 && /[А-Я]/.test(s)).pop();
-        if (lastQuestion) {
-            cleanContent = lastQuestion.trim();
-            if (!/[.!?]$/.test(cleanContent)) {
-                cleanContent += '.';
-            }
-        }
+    let cleanContent = content || '';
+
+    // Убираем скрытое "reasoning" от модели, если оно помечено тегами <think>
+    if (role === 'assistant' || role === 'system') {
+        cleanContent = cleanContent
+            .replace(/<think>[\s\S]*?<\/think>/gi, '')
+            .replace(/<think>[\s\S]*$/gi, '')
+            .replace(/<\/redacted_reasoning>/gi, '');
     }
-    
-    // Если это assistant и текст содержит размышления, берем только вопрос
-    if (role === 'assistant' && cleanContent.includes('Хорошо')) {
-        // Ищем последний вопрос (предложение с вопросительным знаком)
-        const questions = cleanContent.match(/[^.!?]*\?/g);
-        if (questions && questions.length > 0) {
-            cleanContent = questions[questions.length - 1].trim();
-        }
-    }
-    
     const messagesContainer = document.getElementById('chat-messages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${role}`;
@@ -750,7 +1558,7 @@ function addChatMessage(role, content, generationTime = null) {
     timeHtml += '</div>';
     
     messageDiv.innerHTML = `
-        <div class="message-bubble">${escapeHtml(cleanContent)}</div>
+        <div class="message-bubble">${cleanContent}</div>
         ${timeHtml}
     `;
     
@@ -879,10 +1687,10 @@ async function showFinalReport() {
 function displayReport(report) {
     const container = document.getElementById('report-content');
     container.innerHTML = `
-        <h1 style="color: #4ec9b0; margin-bottom: 30px; font-size: 32px;">📊 Финальный отчет</h1>
+        <h1 style="color: #4ec9b0; margin-bottom: 30px; font-size: 32px;">Финальный отчет</h1>
         
         <div class="report-section">
-            <h2>📈 Общая статистика</h2>
+            <h2>Общая статистика</h2>
             <p><strong>Выполнено задач:</strong> ${report.summary.totalTasks}</p>
             <p><strong>Общая оценка:</strong> ${report.scores.overall}/100</p>
             <p><strong>Техническая оценка:</strong> ${report.scores.technical}/100</p>
@@ -891,27 +1699,27 @@ function displayReport(report) {
         </div>
 
         <div class="report-section">
-            <h2>✅ Сильные стороны</h2>
+            <h2>Сильные стороны</h2>
             <ul class="strengths-list">
                 ${(report.strengths || []).map(s => `<li>${escapeHtml(s)}</li>`).join('')}
             </ul>
         </div>
 
         <div class="report-section">
-            <h2>⚠️ Области для улучшения</h2>
+            <h2>Области для улучшения</h2>
             <ul class="weaknesses-list">
                 ${(report.weaknesses || []).map(w => `<li>${escapeHtml(w)}</li>`).join('')}
             </ul>
         </div>
 
         <div class="report-section">
-            <h2>📝 Детальный анализ</h2>
+            <h2>Детальный анализ</h2>
             <p style="line-height: 1.8; white-space: pre-wrap;">${escapeHtml(report.detailedAnalysis || 'Анализ недоступен')}</p>
         </div>
 
         ${report.recommendations && report.recommendations.length > 0 ? `
         <div class="report-section">
-            <h2>💡 Рекомендации</h2>
+            <h2>Рекомендации</h2>
             <ul style="margin-left: 20px;">
                 ${report.recommendations.map(r => `<li style="margin: 10px 0; line-height: 1.6;">${escapeHtml(r)}</li>`).join('')}
             </ul>
@@ -920,7 +1728,7 @@ function displayReport(report) {
 
         <div style="margin-top: 40px; text-align: center;">
             <button class="btn btn-submit" onclick="downloadReport()" style="padding: 15px 30px; font-size: 16px;">
-                📥 Скачать отчет
+                Скачать отчет
             </button>
         </div>
     `;
@@ -956,7 +1764,7 @@ function changeLanguage() {
 // Визуализация этапов
 function formatDuration(ms) {
     if (typeof ms !== 'number' || isNaN(ms)) {
-        return '—';
+        return '-';
     }
     const seconds = (ms / 1000).toFixed(1);
     return `${seconds}s`;
@@ -966,7 +1774,7 @@ function setStageDuration(stageNumber, durationMs) {
     const durationEl = document.getElementById(`stage-${stageNumber}-time`);
     if (!durationEl) return;
     if (durationMs === null || durationMs === undefined) {
-        durationEl.textContent = '—';
+        durationEl.textContent = '-';
         return;
     }
     durationEl.textContent = formatDuration(durationMs);
@@ -981,7 +1789,7 @@ function updateStage(stageNumber, status, durationMs = null) {
     icon.className = `stage-icon ${status}`;
     
     if (status === 'completed') {
-        icon.textContent = '✓';
+        icon.textContent = 'ok';
     } else if (status === 'active') {
         setStageDuration(stageNumber, null);
         icon.textContent = stageNumber;
@@ -1008,14 +1816,13 @@ function showNotification(message, type = 'info') {
     notification.className = `status-notification ${type} show`;
     messageEl.textContent = message;
     
-    const icons = {
-        success: '✅',
-        error: '❌',
-        info: 'ℹ️',
-        warning: '⚠️'
+    const labels = {
+        success: 'OK',
+        error: 'ERR',
+        info: 'INFO',
+        warning: 'WARN'
     };
-    
-    icon.textContent = icons[type] || icons.info;
+    icon.textContent = labels[type] || labels.info;
     
     setTimeout(() => {
         notification.classList.remove('show');
@@ -1036,8 +1843,386 @@ function showLoading(message) {
 
 function showError(message) {
     const container = document.getElementById('task-view');
-    container.innerHTML = `<div class="loading" style="color: #ce9178;">❌ ${message}</div>`;
+    container.innerHTML = `<div class="loading" style="color: #ce9178;">${message}</div>`;
     showNotification(message, 'error');
+}
+
+// -------- Admin panel helpers --------
+function renderAdminPanel() {
+    renderTaskTable();
+    hydrateInterviewForm();
+    renderSessions();
+    renderCandidateResults();
+    renderAntiCheatEvents();
+    
+    const container = document.querySelector('.admin-panel-container');
+    if (!container) return;
+    
+    const statusBadge = container.querySelector('.admin-sync-status');
+    if (statusBadge) {
+        statusBadge.textContent = adminState.loading ? 'Синхронизация...' : (adminState.lastSync ? `Обновлено: ${new Date(adminState.lastSync).toLocaleTimeString()}` : 'Еще не синхронизировано');
+    }
+
+    updateTaskFormUI(adminState.taskFormMode);
+}
+
+function updateTaskFormUI(mode = 'create') {
+    const titleEl = document.getElementById('task-form-title');
+    const submitBtn = document.getElementById('task-form-submit');
+    const cancelBtn = document.getElementById('task-form-cancel');
+    if (!titleEl || !submitBtn || !cancelBtn) {
+        return;
+    }
+
+    if (mode === 'edit') {
+        titleEl.textContent = 'Редактировать задачу';
+        submitBtn.textContent = 'Сохранить изменения';
+        cancelBtn.style.display = 'inline-flex';
+    } else {
+        titleEl.textContent = 'Новая задача';
+        submitBtn.textContent = 'Сохранить задачу';
+        cancelBtn.style.display = 'none';
+    }
+}
+
+function cancelTaskEdit() {
+    const form = document.getElementById('new-task-form');
+    if (form) {
+        form.reset();
+        const hidden = form.querySelector('#task-id-field');
+        if (hidden) hidden.value = '';
+    }
+    adminState.taskFormMode = 'create';
+    adminState.editingTaskId = null;
+    updateTaskFormUI('create');
+}
+
+function beginTaskEdit(taskId) {
+    const task = adminState.tasks.find(t => t.id === taskId);
+    const form = document.getElementById('new-task-form');
+    if (!task || !form) {
+        return;
+    }
+
+    form.querySelector('#task-id-field').value = task.id;
+    form.elements.title.value = task.title || '';
+    form.elements.description.value = task.description || '';
+    form.elements.level.value = task.level || 'Junior';
+    form.elements.topic.value = task.topic || 'algorithms';
+    form.elements.tags.value = Array.isArray(task.tags) ? task.tags.join(', ') : (task.tags || '');
+    if (form.elements.visibility) {
+        form.elements.visibility.value = task.visibility || 'draft';
+    }
+
+    adminState.taskFormMode = 'edit';
+    adminState.editingTaskId = task.id;
+    updateTaskFormUI('edit');
+}
+
+function deleteTask(taskId) {
+    if (!taskId) return;
+    const confirmed = confirm('Удалить задачу из банка?');
+    if (!confirmed) return;
+
+    fetch(`${API_BASE}/admin/tasks/${taskId}`, { method: 'DELETE' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Ошибка удаления задачи: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(() => {
+            adminState.tasks = adminState.tasks.filter(task => task.id !== taskId);
+            if (adminState.editingTaskId === taskId) {
+                cancelTaskEdit();
+            } else {
+                renderTaskTable();
+            }
+            showNotification('Задача удалена из банка', 'info');
+        })
+        .catch(error => {
+            console.error(error);
+            showNotification('Не удалось удалить задачу', 'error');
+        });
+}
+
+function renderTaskTable() {
+    const tbody = document.getElementById('task-table-body');
+    if (!tbody) return;
+
+    const columnCount = 7;
+    const { level, topic, search } = adminState.filters;
+    const filtered = adminState.tasks.filter(task => {
+        const matchesLevel = level === 'all' || task.level === level;
+        const matchesTopic = topic === 'all' || task.topic === topic;
+        const matchesSearch = !search || task.title.toLowerCase().includes(search.toLowerCase()) || task.id.toLowerCase().includes(search.toLowerCase());
+        return matchesLevel && matchesTopic && matchesSearch;
+    });
+
+    if (adminState.loading) {
+        tbody.innerHTML = `<tr><td colspan="${columnCount}">Загрузка...</td></tr>`;
+        return;
+    }
+
+    const rows = filtered.map(task => {
+        const visibility = task.visibility || 'draft';
+        const statusClass = visibility === 'public' ? 'approved' : (visibility === 'private' ? 'rejected' : 'review');
+        return `
+        <tr>
+            <td>${escapeHtml(task.id)}</td>
+            <td>${escapeHtml(task.title)}</td>
+            <td>${escapeHtml(task.level)}</td>
+            <td>${escapeHtml(task.topic)}</td>
+            <td>${escapeHtml(task.updated || '-')}</td>
+            <td><span class="status-badge ${statusClass}">${escapeHtml(visibility)}</span></td>
+            <td class="table-actions">
+                <button type="button" class="btn ghost task-edit-btn" data-task-id="${task.id}">Редакт.</button>
+                <button type="button" class="btn btn-danger task-delete-btn" data-task-id="${task.id}">Удалить</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+
+    tbody.innerHTML = rows || `<tr><td colspan="${columnCount}">Задачи не найдены</td></tr>`;
+
+    tbody.querySelectorAll('.task-edit-btn').forEach(btn => {
+        btn.addEventListener('click', () => beginTaskEdit(btn.dataset.taskId));
+    });
+    tbody.querySelectorAll('.task-delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteTask(btn.dataset.taskId));
+    });
+}
+
+function handleTaskFilterChange() {
+    const levelSelect = document.getElementById('task-level-filter');
+    const topicSelect = document.getElementById('task-topic-filter');
+    const searchInput = document.getElementById('task-search');
+
+    if (levelSelect) adminState.filters.level = levelSelect.value;
+    if (topicSelect) adminState.filters.topic = topicSelect.value;
+    if (searchInput) adminState.filters.search = searchInput.value.trim();
+
+    renderTaskTable();
+}
+
+function handleNewTask(event) {
+    event.preventDefault();
+    const form = event.target;
+    const data = new FormData(form);
+    const taskId = data.get('taskId');
+    const payload = {
+        title: data.get('title'),
+        description: data.get('description'),
+        level: data.get('level'),
+        topic: data.get('topic'),
+        tags: data.get('tags') || '',
+        visibility: data.get('visibility') || 'draft'
+    };
+
+    const endpoint = taskId ? `${API_BASE}/admin/tasks/${taskId}` : `${API_BASE}/admin/tasks`;
+    const method = taskId ? 'PUT' : 'POST';
+
+    fetch(endpoint, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Ошибка сохранения задачи: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(savedTask => {
+        if (taskId) {
+            const index = adminState.tasks.findIndex(task => task.id === savedTask.id);
+            if (index !== -1) {
+                adminState.tasks[index] = savedTask;
+            }
+        } else {
+            adminState.tasks.unshift(savedTask);
+        }
+        cancelTaskEdit();
+        renderTaskTable();
+        showNotification(taskId ? 'Задача обновлена' : 'Задача добавлена в банк', 'success');
+    })
+    .catch(error => {
+        console.error(error);
+        showNotification('Не удалось сохранить задачу', 'error');
+    });
+}
+
+function hydrateInterviewForm() {
+    const form = document.getElementById('interview-settings-form');
+    if (!form) return;
+
+    const settings = adminState.settings || adminDefaults.settings;
+    if (!settings) return;
+
+    form.duration.value = settings.duration;
+    form.maxTasks.value = settings.maxTasks;
+    form.model.value = settings.model;
+    form.temperature.value = settings.temperature;
+    form.metricsTechnical.checked = !!settings.metrics?.technical;
+    form.metricsCommunication.checked = !!settings.metrics?.communication;
+    form.metricsReadability.checked = !!settings.metrics?.readability;
+    form.antiCheatClipboard.checked = !!settings.antiCheat?.clipboard;
+    form.antiCheatDevtools.checked = !!settings.antiCheat?.devtools;
+    form.antiCheatExtensions.checked = !!settings.antiCheat?.extensions;
+}
+
+function saveInterviewSettings(event) {
+    event.preventDefault();
+    const form = event.target;
+    
+    const payload = {
+        duration: Number(form.duration.value),
+        maxTasks: Number(form.maxTasks.value),
+        model: form.model.value,
+        temperature: Number(form.temperature.value),
+        metrics: {
+            technical: form.metricsTechnical.checked,
+            communication: form.metricsCommunication.checked,
+            readability: form.metricsReadability.checked
+        },
+        antiCheat: {
+            clipboard: form.antiCheatClipboard.checked,
+            devtools: form.antiCheatDevtools.checked,
+            extensions: form.antiCheatExtensions.checked
+        }
+    };
+
+    fetch(`${API_BASE}/admin/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Ошибка сохранения настроек: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(settings => {
+        adminState.settings = settings;
+        showNotification('Настройки интервью сохранены', 'success');
+    })
+    .catch(error => {
+        console.error(error);
+        showNotification('Не удалось сохранить настройки', 'error');
+    });
+}
+
+function renderSessions() {
+    const container = document.getElementById('session-grid');
+    if (!container) return;
+
+    container.innerHTML = adminState.sessions.map(session => `
+        <div class="session-card">
+            <h3>${session.candidate}</h3>
+            <div class="session-meta">Уровень: ${session.level}</div>
+            <div class="session-meta">Статус: ${session.status === 'active' ? 'В процессе' : 'Ожидает'}</div>
+            <div class="session-meta">Старт: ${session.started} • Время: ${session.timeSpent}</div>
+            <div class="session-progress">
+                <div class="session-progress-bar" style="width:${session.progress}%"></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function refreshSessions() {
+    fetch(`${API_BASE}/admin/sessions/refresh`, { method: 'POST' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Ошибка обновления сессий: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(sessions => {
+            adminState.sessions = sessions;
+            renderSessions();
+            showNotification('Список интервью обновлен', 'info');
+        })
+        .catch(error => {
+            console.error(error);
+            showNotification('Не удалось обновить сессии', 'error');
+        });
+}
+
+function renderCandidateResults() {
+    const tbody = document.getElementById('candidate-table-body');
+    const filter = document.getElementById('candidate-filter');
+    if (!tbody) return;
+
+    if (adminState.loading) {
+        tbody.innerHTML = `<tr><td colspan="8">Загрузка...</td></tr>`;
+        return;
+    }
+
+    const statusFilter = filter ? filter.value : 'all';
+    const rows = adminState.candidates
+        .filter(c => statusFilter === 'all' || c.status === statusFilter)
+        .map(candidate => `
+            <tr>
+                <td>${candidate.name}</td>
+                <td>${candidate.level}</td>
+                <td>${candidate.overall}</td>
+                <td>${candidate.technical}</td>
+                <td>${candidate.communication}</td>
+                <td>${candidate.attempts}</td>
+                <td>${candidate.time}</td>
+                <td><span class="status-badge ${candidate.status}">${candidate.status}</span></td>
+            </tr>
+        `).join('');
+
+    tbody.innerHTML = rows || `<tr><td colspan="8">Кандидаты не найдены</td></tr>`;
+}
+
+function renderAntiCheatEvents() {
+    const container = document.getElementById('anti-cheat-events');
+    if (!container) return;
+
+    const events = adminState.antiCheatEvents || [];
+    if (!events.length) {
+        container.innerHTML = '<div class="anti-cheat-event">События отсутствуют</div>';
+        return;
+    }
+
+    container.innerHTML = events.slice(-10).reverse().map(event => `
+        <div class="anti-cheat-event">
+            <div class="anti-cheat-event-type">${escapeHtml(event.type)}</div>
+            <div class="anti-cheat-event-meta">${new Date(event.createdAt).toLocaleString()}</div>
+            ${event.details ? `<div class="anti-cheat-event-details">${escapeHtml(JSON.stringify(event.details))}</div>` : ''}
+        </div>
+    `).join('');
+}
+
+function downloadAdminReport(format) {
+    const normalized = format === 'csv' ? 'csv' : 'json';
+    fetch(`${API_BASE}/admin/export?format=${normalized}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Ошибка экспорта: ${response.status}`);
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            const extension = normalized === 'csv' ? 'csv' : 'json';
+            triggerDownload(url, `admin-report-${Date.now()}.${extension}`);
+        })
+        .catch(error => {
+            console.error(error);
+            showNotification('Экспорт не удался', 'error');
+        });
+}
+
+function triggerDownload(url, filename) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 // Запуск секундомера
@@ -1073,4 +2258,81 @@ if (chatMessages) {
         }
     });
 }
+
+const antiCheatCooldown = {};
+
+function reportAntiCheatEvent(type, details = {}) {
+    // Если античит отключен в режиме кандидата, игнорируем события
+    if (!interviewState.antiCheatEnabled) {
+        return;
+    }
+
+    const now = Date.now();
+    if (antiCheatCooldown[type] && now - antiCheatCooldown[type] < 2000) {
+        return;
+    }
+    antiCheatCooldown[type] = now;
+
+    const event = {
+        id: `client-${now}`,
+        type,
+        details,
+        createdAt: new Date(now).toISOString()
+    };
+    adminState.antiCheatEvents = [...(adminState.antiCheatEvents || []), event].slice(-50);
+    renderAntiCheatEvents();
+
+    fetch(`${API_BASE}/anti-cheat/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, details })
+    }).catch(error => console.error('anti-cheat event', error));
+}
+
+function setupAntiCheatTracking() {
+    document.addEventListener('copy', () => reportAntiCheatEvent('clipboard-copy'));
+    document.addEventListener('paste', () => reportAntiCheatEvent('clipboard-paste'));
+    window.addEventListener('blur', () => reportAntiCheatEvent('window-blur'));
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            reportAntiCheatEvent('tab-hidden');
+        }
+    });
+    window.addEventListener('keydown', (event) => {
+        const key = event.key.toLowerCase();
+        if (key === 'f12' || (event.ctrlKey && event.shiftKey && ['i', 'j', 'c'].includes(key))) {
+            reportAntiCheatEvent('devtools');
+        }
+    });
+}
+
+function updateAntiCheatToggleUI() {
+    const btn = document.getElementById('anti-cheat-toggle');
+    if (!btn) return;
+    if (interviewState.antiCheatEnabled) {
+        btn.textContent = 'Античит: вкл';
+        btn.classList.remove('off');
+    } else {
+        btn.textContent = 'Античит: выкл';
+        btn.classList.add('off');
+    }
+}
+
+function toggleAntiCheat() {
+    interviewState.antiCheatEnabled = !interviewState.antiCheatEnabled;
+    updateAntiCheatToggleUI();
+    showNotification(
+        interviewState.antiCheatEnabled
+            ? 'Режим античита включен для текущего интервью.'
+            : 'Режим античита отключен для текущего интервью.',
+        'info'
+    );
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateTaskFormUI('create');
+    setupAntiCheatTracking();
+    updateAntiCheatToggleUI();
+    loadAdminData();
+});
 

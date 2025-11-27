@@ -10,7 +10,10 @@
     <!-- Level Selector Screen -->
     <div id="level-selector" class="screen active">
         <div class="level-selector-container">
-            <h1>🎯 AI Interviewer Platform</h1>
+            <div class="level-selector-top">
+                <h1>AI Interviewer Platform</h1>
+                <button class="admin-link" onclick="openAdminPanel()">Админ-панель</button>
+            </div>
             <p class="subtitle">Выберите уровень собеседования</p>
             <div class="level-buttons">
                 <button class="level-btn" onclick="startInterview('Junior')">
@@ -38,53 +41,53 @@
         
         <!-- Status Notification -->
         <div class="status-notification" id="status-notification">
-            <span id="status-icon">ℹ️</span>
+            <span id="status-icon"></span>
             <span id="status-message"></span>
         </div>
         
         <!-- Stage Indicator -->
         <div class="stage-indicator" id="stage-indicator">
-            <div class="stage-title">📊 Этапы интервью</div>
+            <div class="stage-title">Этапы интервью</div>
             <div class="stage-item pending" id="stage-1">
                 <div class="stage-icon pending">1</div>
                 <div class="stage-text">
                     <span>Генерация задачи</span>
-                    <span class="stage-duration" id="stage-1-time">—</span>
+                    <span class="stage-duration" id="stage-1-time">-</span>
                 </div>
             </div>
             <div class="stage-item pending" id="stage-2">
                 <div class="stage-icon pending">2</div>
                 <div class="stage-text">
                     <span>Решение задачи</span>
-                    <span class="stage-duration" id="stage-2-time">—</span>
+                    <span class="stage-duration" id="stage-2-time">-</span>
                 </div>
             </div>
             <div class="stage-item pending" id="stage-3">
                 <div class="stage-icon pending">3</div>
                 <div class="stage-text">
                     <span>Анализ решения</span>
-                    <span class="stage-duration" id="stage-3-time">—</span>
+                    <span class="stage-duration" id="stage-3-time">-</span>
                 </div>
             </div>
             <div class="stage-item pending" id="stage-4">
                 <div class="stage-icon pending">4</div>
                 <div class="stage-text">
                     <span>Вопрос интервьюера</span>
-                    <span class="stage-duration" id="stage-4-time">—</span>
+                    <span class="stage-duration" id="stage-4-time">-</span>
                 </div>
             </div>
             <div class="stage-item pending" id="stage-5">
                 <div class="stage-icon pending">5</div>
                 <div class="stage-text">
                     <span>Вторая задача</span>
-                    <span class="stage-duration" id="stage-5-time">—</span>
+                    <span class="stage-duration" id="stage-5-time">-</span>
                 </div>
             </div>
             <div class="stage-item pending" id="stage-6">
                 <div class="stage-icon pending">6</div>
                 <div class="stage-text">
                     <span>Финальный отчет</span>
-                    <span class="stage-duration" id="stage-6-time">—</span>
+                    <span class="stage-duration" id="stage-6-time">-</span>
                 </div>
             </div>
         </div>
@@ -92,6 +95,10 @@
         <div class="header">
             <div class="header-left">
                 <h1>AI Interviewer Platform</h1>
+            </div>
+            <div class="header-actions">
+                <button class="admin-link secondary" id="anti-cheat-toggle" type="button" onclick="toggleAntiCheat()">Античит: вкл</button>
+                <button class="admin-link secondary" onclick="openAdminPanel()">Админ-панель</button>
             </div>
             <div class="metrics-bar">
                 <div class="metric">
@@ -114,7 +121,7 @@
             <div class="left-panel">
                 <div class="panel-section">
                     <div class="panel-header">
-                        <span>📋 Задача</span>
+                        <span>Задача</span>
                         <span class="task-level" id="task-level">Junior</span>
                     </div>
                     <div class="task-view" id="task-view">
@@ -124,7 +131,7 @@
 
                 <div class="panel-section">
                     <div class="panel-header">
-                        <span>💻 Редактор кода</span>
+                        <span>Редактор кода</span>
                         <select id="language-select" onchange="changeLanguage()">
                             <option value="python">Python</option>
                             <option value="javascript">JavaScript</option>
@@ -133,14 +140,29 @@
                     </div>
                     <div class="ide-toolbar">
                         <button class="btn btn-run" onclick="runCode()">
-                            ▶ Запустить тесты
+                            Запустить тесты
                         </button>
                         <button class="btn btn-submit" onclick="submitSolution()">
-                            ✓ Отправить решение
+                            Отправить решение
                         </button>
                     </div>
                     <div class="ide-container">
                         <div id="monaco-editor"></div>
+                    </div>
+                </div>
+
+                <div class="panel-section runtime-panel">
+                    <div class="panel-header">
+                        <span>Исполнение</span>
+                    </div>
+                    <div class="runtime-controls">
+                        <label for="runtime-input">Входные данные</label>
+                        <textarea id="runtime-input" placeholder="Пример: 1 2 3" rows="3"></textarea>
+                        <div class="runtime-actions">
+                            <button class="btn btn-run" type="button" onclick="executeManualRun()">Запустить</button>
+                            <span class="runtime-status" id="runtime-status"></span>
+                        </div>
+                        <pre class="runtime-output" id="runtime-output">Вывод появится здесь</pre>
                     </div>
                 </div>
             </div>
@@ -149,7 +171,7 @@
             <div class="right-panel">
                 <div class="panel-section chat-section">
                     <div class="panel-header">
-                        <span>💬 Чат с интервьюером</span>
+                        <span>Чат с интервьюером</span>
                     </div>
                     <div class="chat-container">
                         <div class="chat-messages" id="chat-messages">
@@ -161,7 +183,7 @@
                             </div>
                         </div>
                         <button class="scroll-to-bottom-btn" id="scroll-to-bottom-btn" onclick="scrollChatToBottom()" title="Прокрутить вниз">
-                            ↓
+                            Вниз
                         </button>
                         <div class="chat-input-container">
                             <input type="text" 
@@ -181,6 +203,234 @@
     <div id="report-screen" class="screen">
         <div class="report-container" id="report-content">
             <div class="loading">Генерация отчета...</div>
+        </div>
+    </div>
+
+    <!-- Admin Panel Screen -->
+    <div id="admin-panel" class="screen">
+        <div class="admin-panel-container">
+            <div class="admin-panel-header">
+                <div>
+                    <div class="breadcrumbs">AI Interviewer • Admin</div>
+                    <h1>Админ-панель</h1>
+                    <div class="admin-sync-status">Еще не синхронизировано</div>
+                </div>
+                <div class="admin-panel-actions">
+                    <button class="btn ghost" onclick="returnToCandidate()">Режим кандидата</button>
+                    <button class="btn btn-submit" onclick="syncAdminState()">Синхронизировать</button>
+                </div>
+            </div>
+
+            <div class="admin-grid">
+                <section class="admin-section column-span-2">
+                    <div class="section-header">
+                        <div>
+                            <h2>Банк задач</h2>
+                            <p>Фильтруйте, редактируйте и добавляйте задачи для разных уровней.</p>
+                        </div>
+                        <div class="filters">
+                            <select id="task-level-filter" onchange="handleTaskFilterChange()">
+                                <option value="all">Все уровни</option>
+                                <option value="Junior">Junior</option>
+                                <option value="Middle">Middle</option>
+                                <option value="Senior">Senior</option>
+                            </select>
+                            <select id="task-topic-filter" onchange="handleTaskFilterChange()">
+                                <option value="all">Все темы</option>
+                                <option value="algorithms">Algorithms</option>
+                                <option value="system-design">System Design</option>
+                                <option value="databases">Databases</option>
+                            </select>
+                            <input type="search" id="task-search" placeholder="Поиск задачи" oninput="handleTaskFilterChange()">
+                        </div>
+                    </div>
+                    <div class="task-table-wrapper">
+                        <table class="task-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Название</th>
+                                    <th>Уровень</th>
+                                    <th>Тема</th>
+                                    <th>Последнее обновление</th>
+                                    <th>Видимость</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody id="task-table-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="admin-section">
+                    <div class="section-header">
+                        <div>
+                            <h2 id="task-form-title">Новая задача</h2>
+                            <p>Добавьте задачу в банк и привяжите к уровню и теме.</p>
+                        </div>
+                    </div>
+                    <form id="new-task-form" onsubmit="handleNewTask(event)" class="form-grid">
+                        <input type="hidden" name="taskId" id="task-id-field">
+                        <label>
+                            Название
+                            <input type="text" name="title" placeholder="Например, Баланс скобок" required>
+                        </label>
+                        <label class="full-row">
+                            Описание
+                            <textarea name="description" rows="3" placeholder="Краткое условие задачи" required></textarea>
+                        </label>
+                        <label>
+                            Уровень
+                            <select name="level" required>
+                                <option>Junior</option>
+                                <option>Middle</option>
+                                <option>Senior</option>
+                            </select>
+                        </label>
+                        <label>
+                            Тема
+                            <select name="topic" required>
+                                <option value="algorithms">Algorithms</option>
+                                <option value="system-design">System Design</option>
+                                <option value="databases">Databases</option>
+                            </select>
+                        </label>
+                        <label>
+                            Теги
+                            <input type="text" name="tags" placeholder="stack, dfs, strings">
+                        </label>
+                        <label>
+                            Видимость
+                            <select name="visibility">
+                                <option value="public">Public</option>
+                                <option value="private">Private</option>
+                                <option value="draft">Draft</option>
+                            </select>
+                        </label>
+                        <div class="form-actions full-row">
+                            <button class="btn btn-submit" type="submit" id="task-form-submit">Сохранить задачу</button>
+                            <button class="btn ghost" type="button" id="task-form-cancel" onclick="cancelTaskEdit()">Отмена</button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="admin-section">
+                    <div class="section-header">
+                        <div>
+                            <h2>Настройки интервью</h2>
+                            <p>Определите длительность, модели и метрики.</p>
+                        </div>
+                    </div>
+                    <form id="interview-settings-form" onsubmit="saveInterviewSettings(event)" class="form-grid">
+                        <label>
+                            Длительность (мин)
+                            <input type="number" name="duration" min="15" max="120" required>
+                        </label>
+                        <label>
+                            Макс. задач
+                            <input type="number" name="maxTasks" min="1" max="5" required>
+                        </label>
+                        <label>
+                            Модель
+                            <select name="model">
+                                <option value="qwen3-coder-30b-a3b-instruct-fp8">Qwen3 Coder 30B</option>
+                                <option value="qwen-plus">Qwen Plus</option>
+                                <option value="gpt-4o-mini">GPT-4o mini</option>
+                            </select>
+                        </label>
+                        <label>
+                            Температура
+                            <input type="number" name="temperature" min="0" max="1" step="0.1">
+                        </label>
+                        <div class="toggle-group full-row">
+                            <label class="toggle">
+                                <input type="checkbox" name="metricsTechnical">
+                                <span>Техническая оценка</span>
+                            </label>
+                            <label class="toggle">
+                                <input type="checkbox" name="metricsCommunication">
+                                <span>Коммуникации</span>
+                            </label>
+                            <label class="toggle">
+                                <input type="checkbox" name="metricsReadability">
+                                <span>Читаемость кода</span>
+                            </label>
+                        </div>
+                        <div class="toggle-group full-row">
+                            <label class="toggle">
+                                <input type="checkbox" name="antiCheatClipboard">
+                                <span>Анализ буфера обмена</span>
+                            </label>
+                            <label class="toggle">
+                                <input type="checkbox" name="antiCheatDevtools">
+                                <span>Детект DevTools</span>
+                            </label>
+                            <label class="toggle">
+                                <input type="checkbox" name="antiCheatExtensions">
+                                <span>Браузерные расширения</span>
+                            </label>
+                        </div>
+                        <button class="btn btn-submit full-row" type="submit">Сохранить настройки</button>
+                    </form>
+                </section>
+
+                <section class="admin-section column-span-2">
+                    <div class="section-header">
+                        <div>
+                            <h2>Активные интервью</h2>
+                            <p>Следите за прогрессом кандидатов в реальном времени.</p>
+                        </div>
+                        <button class="btn ghost" onclick="refreshSessions()">Обновить</button>
+                    </div>
+                    <div class="session-grid" id="session-grid"></div>
+                </section>
+
+                <section class="admin-section column-span-2">
+                    <div class="section-header">
+                        <div>
+                            <h2>Результаты кандидатов</h2>
+                            <p>Финальные баллы, попытки и экспорт отчетов.</p>
+                        </div>
+                        <div class="filters">
+                            <select id="candidate-filter" onchange="renderCandidateResults()">
+                                <option value="all">Все статусы</option>
+                                <option value="review">На проверке</option>
+                                <option value="approved">Одобрено</option>
+                                <option value="rejected">Отклонено</option>
+                            </select>
+                            <button class="btn btn-run" onclick="downloadAdminReport('csv')">CSV</button>
+                            <button class="btn btn-run" onclick="downloadAdminReport('json')">JSON</button>
+                        </div>
+                    </div>
+                    <div class="results-table-wrapper">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Кандидат</th>
+                                    <th>Уровень</th>
+                                    <th>Итог</th>
+                                    <th>Техника</th>
+                                    <th>Коммуникации</th>
+                                    <th>Попытки</th>
+                                    <th>Время</th>
+                                    <th>Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody id="candidate-table-body"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="admin-section column-span-2">
+                    <div class="section-header">
+                        <div>
+                            <h2>События античита</h2>
+                            <p>Последние зафиксированные действия на клиенте</p>
+                        </div>
+                    </div>
+                    <div class="anti-cheat-list" id="anti-cheat-events"></div>
+                </section>
+            </div>
         </div>
     </div>
 
