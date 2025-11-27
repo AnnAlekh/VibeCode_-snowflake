@@ -27,3 +27,7 @@
 - Node.js `v22.21.1`
 - npm `10.9.4`
 - Git `2.48.1`
+
+
+
+Демонстрация и другое лежит в этой ссылке: https://drive.google.com/drive/folders/1Vo4KOkk8YdHYjUceThH28mtsEVRgv1v4?usp=sharing
