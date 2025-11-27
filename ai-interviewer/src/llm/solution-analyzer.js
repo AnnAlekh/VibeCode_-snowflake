@@ -37,18 +37,54 @@ class SolutionAnalyzer {
         temperature: 0.3 // Низкая температура для более точного анализа
       });
 
-      // Дополняем анализ метриками
+      // Извлекаем метрики производительности из testResults
+      const testResults = params.testResults || {};
+      const performance = testResults.performance || {};
+      
+      // Извлекаем время выполнения из результатов тестов
+      const visibleTests = testResults.visible || [];
+      const hiddenTests = testResults.hidden || [];
+      const allTests = [...visibleTests, ...hiddenTests];
+      
+      // Вычисляем метрики производительности
+      const executionTimes = allTests
+        .map(t => t.executionTime)
+        .filter(t => t !== undefined && t !== null);
+      
+      const averageExecutionTime = executionTimes.length > 0
+        ? executionTimes.reduce((sum, t) => sum + t, 0) / executionTimes.length
+        : 0;
+      const maxExecutionTime = executionTimes.length > 0
+        ? Math.max(...executionTimes)
+        : 0;
+      const minExecutionTime = executionTimes.length > 0
+        ? Math.min(...executionTimes)
+        : 0;
+      
+      // Дополняем анализ метриками производительности
       const enhancedAnalysis = {
         correctness: analysis.correctness || 0,
         optimality: analysis.optimality || 0,
         codeQuality: analysis.codeQuality || 0,
-        timeComplexity: analysis.timeComplexity || 'не определена',
+        timeComplexity: analysis.timeComplexity || analysis.complexity || 'не определена',
         spaceComplexity: analysis.spaceComplexity || 'не определена',
-        feedback: analysis.feedback || '',
+        feedback: analysis.feedback || analysis.comments || '',
         strengths: analysis.strengths || [],
         weaknesses: analysis.weaknesses || [],
         suggestions: analysis.suggestions || [],
-        overallScore: this.calculateOverallScore(analysis)
+        overallScore: this.calculateOverallScore(analysis),
+        score: this.calculateOverallScore(analysis), // Дублируем для совместимости
+        // Добавляем метрики производительности
+        performance: {
+          averageExecutionTime: performance.averageHiddenTime || performance.averageVisibleTime || averageExecutionTime,
+          maxExecutionTime: performance.maxExecutionTime || maxExecutionTime,
+          minExecutionTime: performance.minExecutionTime || minExecutionTime,
+          totalExecutionTime: (performance.totalHiddenTime || 0) + (performance.totalVisibleTime || 0) || 
+                            executionTimes.reduce((sum, t) => sum + t, 0),
+          testsCount: performance.totalTests || allTests.length,
+          passedTestsCount: performance.passedTests || allTests.filter(t => t.passed).length,
+          executionTimes: executionTimes.length > 0 ? executionTimes : undefined
+        }
       };
 
       console.log(`✅ Анализ завершен. Общая оценка: ${enhancedAnalysis.overallScore}/100`);
@@ -230,11 +266,11 @@ class SolutionAnalyzer {
    * @returns {Object} Оценка ответа
    */
   async evaluateAnswer(params) {
-    const { question, answer, solution } = params;
+    const { question, answer, solution, context = {} } = params;
 
     console.log(`\n📝 Оценка ответа кандидата`);
 
-    const prompt = PROMPTS.evaluateAnswer(question, answer, solution);
+    const prompt = PROMPTS.evaluateAnswer({ question, answer, solution, context });
 
     try {
       const evaluation = await this.llmClient.analyzeCode([
@@ -313,7 +349,7 @@ class SolutionAnalyzer {
       console.error('Ошибка при резюмировании:', error);
       throw error;
     }
-  },
+  }
 
   async generateAdditionalTechnicalQuestion(params) {
     const { task, solution, previousQuestion, previousAnswer, analysis, questionNumber } = params;
@@ -379,6 +415,42 @@ class SolutionAnalyzer {
       return question;
     } catch (error) {
       console.error('Ошибка при генерации финального вопроса:', error);
+      throw error;
+    }
+  }
+
+  async generateHint(params) {
+    const {
+      type = 'task',
+      task = {},
+      code = '',
+      question = '',
+      analysis = {},
+      chatHistory = []
+    } = params;
+
+    console.log(`\n💡 Генерация подсказки (${type})`);
+
+    const prompt = PROMPTS.generateHint({ type, task, code, question, analysis, chatHistory });
+
+    try {
+      const hint = await this.llmClient.chatDialogue([
+        {
+          role: 'system',
+          content: 'Ты наставник на техническом интервью. Дай короткую подсказку на русском языке, которая направляет кандидата, но не раскрывает полное решение.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ], {
+        temperature: 0.5,
+        max_tokens: 400
+      });
+
+      return hint.trim();
+    } catch (error) {
+      console.error('Ошибка при генерации подсказки:', error);
       throw error;
     }
   }

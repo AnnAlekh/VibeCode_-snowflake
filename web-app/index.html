@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Interviewer Platform</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="styles.css?v=2.8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 </head>
 <body>
     <!-- Level Selector Screen -->
@@ -44,6 +48,7 @@
             <span id="status-icon"></span>
             <span id="status-message"></span>
         </div>
+        <div id="model-retry-container" class="model-retry hidden"></div>
         
         <!-- Stage Indicator -->
         <div class="stage-indicator" id="stage-indicator">
@@ -95,9 +100,13 @@
         <div class="header">
             <div class="header-left">
                 <h1>AI Interviewer Platform</h1>
+                <span class="anti-cheat-status" id="anti-cheat-status" data-anticheat="enabled"></span>
+                <!-- Anti-cheat event handlers: copy, paste, blur, visibilitychange, keydown (DevTools) -->
+                <!-- Clipboard detection: document.addEventListener('copy'), document.addEventListener('paste') -->
+                <!-- Tab detection: window.addEventListener('blur'), document.addEventListener('visibilitychange') -->
+                <!-- DevTools detection: window.addEventListener('keydown') for F12, Ctrl+Shift+I/J/C -->
             </div>
             <div class="header-actions">
-                <button class="admin-link secondary" id="anti-cheat-toggle" type="button" onclick="toggleAntiCheat()">Античит: вкл</button>
                 <button class="admin-link secondary" onclick="openAdminPanel()">Админ-панель</button>
             </div>
             <div class="metrics-bar">
@@ -126,6 +135,23 @@
                     </div>
                     <div class="task-view" id="task-view">
                         <div class="loading">Загрузка задачи...</div>
+                    </div>
+                    <div class="hint-controls" id="hint-controls">
+                        <button class="btn ghost"
+                                type="button"
+                                id="task-hint-btn"
+                                onclick="requestHint('task')">
+                            Подсказка по задаче (2/2)
+                        </button>
+                        <button class="btn ghost"
+                                type="button"
+                                id="question-hint-btn"
+                                onclick="requestHint('question')">
+                            Подсказка по вопросу
+                        </button>
+                        <div class="hint-meta" id="hint-limit-meta">
+                            Доступно 2 подсказки на задачу
+                        </div>
                     </div>
                 </div>
 
@@ -192,6 +218,62 @@
                                    placeholder="Введите ваш ответ..." 
                                    onkeypress="handleChatKeyPress(event)">
                             <button class="btn btn-send" onclick="sendMessage()">Отправить</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-section insights-section">
+                    <div class="panel-header">
+                        <span>Личные метрики</span>
+                    </div>
+                    <div class="candidate-insights-grid">
+                        <div class="insight-card">
+                            <div class="insight-card-title">Прогресс интервью</div>
+                            <div class="insight-progress">
+                                <div class="insight-progress-fill" id="candidate-stage-progress-bar"></div>
+                            </div>
+                            <div class="insight-progress-meta">
+                                <span id="candidate-stage-progress-label">0/6 этапов</span>
+                                <span id="candidate-stage-current">Текущий этап: —</span>
+                            </div>
+                        </div>
+                        <div class="insight-card">
+                            <div class="insight-card-title">Результаты тестов</div>
+                            <div class="insight-stats">
+                                <div>
+                                    <strong id="candidate-tests-total">—</strong>
+                                    <span>Всего</span>
+                                </div>
+                                <div>
+                                    <strong id="candidate-tests-visible">—</strong>
+                                    <span>Видимые</span>
+                                </div>
+                                <div>
+                                    <strong id="candidate-tests-hidden">—</strong>
+                                    <span>Скрытые</span>
+                                </div>
+                            </div>
+                            <div class="insight-subtext" id="candidate-tests-message">Запустите тесты, чтобы увидеть статистику</div>
+                            <div class="insight-subtext" id="candidate-hints-used">Подсказки использованы: 0</div>
+                        </div>
+                        <div class="insight-card">
+                            <div class="insight-card-title">История интервью</div>
+                            <div class="insight-history">
+                                <div>
+                                    <span>Средний балл</span>
+                                    <strong id="candidate-history-average">—</strong>
+                                </div>
+                                <div>
+                                    <span>Лучший результат</span>
+                                    <strong id="candidate-history-best">—</strong>
+                                </div>
+                                <div>
+                                    <span>Динамика</span>
+                                    <strong id="candidate-history-trend">—</strong>
+                                </div>
+                            </div>
+                            <ul class="insight-history-list" id="candidate-history-list">
+                                <li>История появится после завершения интервью</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -358,6 +440,12 @@
                         </div>
                         <div class="toggle-group full-row">
                             <label class="toggle">
+                                <input type="checkbox" name="antiCheatEnabled" id="antiCheatEnabled" onchange="handleAntiCheatToggle()">
+                                <span>Включить античит</span>
+                            </label>
+                        </div>
+                        <div class="toggle-group full-row">
+                            <label class="toggle">
                                 <input type="checkbox" name="antiCheatClipboard">
                                 <span>Анализ буфера обмена</span>
                             </label>
@@ -383,6 +471,53 @@
                         <button class="btn ghost" onclick="refreshSessions()">Обновить</button>
                     </div>
                     <div class="session-grid" id="session-grid"></div>
+                </section>
+                <section class="admin-section column-span-2 analytics-section">
+                    <div class="section-header">
+                        <div>
+                            <h2>Метрики потока кандидатов</h2>
+                            <p>Сводка по качеству решений, скорости и безопасности.</p>
+                        </div>
+                        <button class="btn ghost" onclick="refreshAdminAnalytics()">Обновить метрики</button>
+                    </div>
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <div class="analytics-label">Средний балл</div>
+                            <div class="analytics-value" id="admin-metric-avg-score">--</div>
+                            <div class="analytics-subtext" id="admin-metric-score-trend">Нет данных</div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-label">Проходной %</div>
+                            <div class="analytics-value" id="admin-metric-pass-rate">--</div>
+                            <div class="analytics-subtext">Approved / всего</div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-label">Время решения</div>
+                            <div class="analytics-value" id="admin-metric-time">--</div>
+                            <div class="analytics-subtext">Среднее по кандидатам</div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-label">Активные сессии</div>
+                            <div class="analytics-value" id="admin-metric-active">0/0</div>
+                            <div class="analytics-subtext">В процессе / всего</div>
+                        </div>
+                    </div>
+                    <div class="analytics-lists">
+                        <div class="analytics-list">
+                            <h3>Распределение уровней</h3>
+                            <ul id="admin-level-distribution">
+                                <li>Нет данных</li>
+                            </ul>
+                        </div>
+                        <div class="analytics-list">
+                            <h3>Статусы рекомендаций</h3>
+                            <p id="admin-status-breakdown">Нет данных</p>
+                        </div>
+                        <div class="analytics-list">
+                            <h3>Античит-инциденты</h3>
+                            <div id="admin-anti-cheat-summary">Инциденты отсутствуют</div>
+                        </div>
+                    </div>
                 </section>
 
                 <section class="admin-section column-span-2">
@@ -424,11 +559,54 @@
                 <section class="admin-section column-span-2">
                     <div class="section-header">
                         <div>
+                            <h2>Отчет по метрикам</h2>
+                            <p>Средние баллы, распределение по уровням и статусам.</p>
+                        </div>
+                        <button class="btn ghost" onclick="refreshCandidateMetricsReport()">Обновить</button>
+                    </div>
+                    <div class="metrics-report" id="candidate-metrics-report"></div>
+                </section>
+
+                <section class="admin-section column-span-2">
+                    <div class="section-header">
+                        <div>
+                            <h2>Протокол прозрачности</h2>
+                            <p>Полный журнал действий, рассуждений и внутренних оценок.</p>
+                        </div>
+                        <div class="filters">
+                            <button class="btn ghost" onclick="refreshTransparencyProtocol()">Обновить</button>
+                            <button class="btn btn-run" onclick="downloadTransparencyProtocol()">Скачать протокол</button>
+                        </div>
+                    </div>
+                    <div class="protocol-container" id="transparency-protocol"></div>
+                </section>
+
+                <section class="admin-section column-span-2">
+                    <div class="section-header">
+                        <div>
                             <h2>События античита</h2>
                             <p>Последние зафиксированные действия на клиенте</p>
                         </div>
                     </div>
                     <div class="anti-cheat-list" id="anti-cheat-events"></div>
+                </section>
+
+                <section class="admin-section column-span-2">
+                    <div class="section-header">
+                        <div>
+                            <h2>Системные логи</h2>
+                            <p>Все действия и события системы в реальном времени</p>
+                        </div>
+                        <div class="filters">
+                            <button class="btn btn-run" onclick="downloadSystemLogs('json')">Экспорт JSON</button>
+                            <button class="btn btn-run" onclick="downloadSystemLogs('text')">Экспорт TXT</button>
+                            <button class="btn ghost" onclick="clearSystemLogs()">Очистить</button>
+                            <button class="btn ghost" onclick="showLogStats()">Статистика</button>
+                        </div>
+                    </div>
+                    <div class="log-viewer-container">
+                        <div class="log-viewer" id="log-viewer-content"></div>
+                    </div>
                 </section>
             </div>
         </div>
@@ -436,7 +614,8 @@
 
     <!-- Monaco Editor -->
     <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
-    <script src="app.js"></script>
+    <!-- Refactored version with modular structure (ES6 modules) -->
+    <script type="module" src="app.js?v=2.9"></script>
 </body>
 </html>
 

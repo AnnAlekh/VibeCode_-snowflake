@@ -110,6 +110,44 @@ const generateTaskId = (level = 'JR') => {
   return `${prefix}-${Math.floor(100 + Math.random() * 900)}`;
 };
 
+const generateCandidateId = () => {
+  let attempts = 0;
+  let id = '';
+  do {
+    id = `CND-${Math.floor(1000 + Math.random() * 9000)}`;
+    attempts += 1;
+  } while (adminData.candidates.some(candidate => candidate.id === id) && attempts < 5);
+
+  if (adminData.candidates.some(candidate => candidate.id === id)) {
+    id = `CND-${Date.now()}`;
+  }
+  return id;
+};
+
+const buildCandidateCard = (payload = {}) => {
+  const normalize = (value) => (typeof value === 'string' ? value.trim() : '');
+  const firstName = normalize(payload.firstName);
+  const patronymic = normalize(payload.patronymic);
+  const lastName = normalize(payload.lastName);
+  const explicitName = normalize(payload.name);
+  const nameParts = [firstName, patronymic, lastName].filter(Boolean);
+
+  return {
+    id: payload.id ? String(payload.id).trim() : generateCandidateId(),
+    name: nameParts.length ? nameParts.join(' ') : (explicitName || 'Новый кандидат'),
+    firstName: firstName || undefined,
+    patronymic: patronymic || undefined,
+    lastName: lastName || undefined,
+    level: payload.level || 'Junior',
+    overall: Number(payload.overall) || 0,
+    technical: Number(payload.technical) || 0,
+    communication: Number(payload.communication) || 0,
+    attempts: Number(payload.attempts) || 0,
+    time: payload.time || '—',
+    status: payload.status || 'review'
+  };
+};
+
 const mergeNested = (existing = {}, incoming = {}) => ({
   ...existing,
   ...Object.entries(incoming || {}).reduce((acc, [key, value]) => {
@@ -244,31 +282,95 @@ app.post('/api/tasks/generate', async (req, res) => {
 
 // Streaming генерация задачи
 app.post('/api/tasks/generate-stream', async (req, res) => {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
+    // Проверяем, запрашивает ли клиент JSON или SSE
+    // По умолчанию возвращаем JSON (не stream), если не указан параметр stream=true
+    const acceptHeader = req.headers.accept || '';
+    const wantsStream = req.query.stream === 'true' || req.query.stream === '1';
+    const wantsJSON = !wantsStream && (acceptHeader.includes('application/json') || req.query.format === 'json' || !acceptHeader.includes('text/event-stream'));
 
-    try {
-        let fullContent = '';
-        
-        await taskGenerator.generateTaskStream(req.body, (chunk, accumulated) => {
-            fullContent = accumulated;
-            res.write(`data: ${JSON.stringify({ chunk, accumulated })}\n\n`);
-        });
+    if (wantsJSON) {
+        // JSON режим: возвращаем задачу напрямую как JSON
+        try {
+            let finalTask = null;
+            
+            // Генерируем задачу через стриминг, но без отправки событий
+            try {
+                finalTask = await taskGenerator.generateTaskStream(req.body, () => {
+                    // Игнорируем чанки в JSON режиме
+                });
+            } catch (streamError) {
+                console.warn('Streaming generation failed, falling back to regular generation:', streamError.message);
+            }
 
-        // После завершения отправляем финальную задачу
-        const task = await taskGenerator.generateTask({
-            level: req.body.level,
-            topic: req.body.topic,
-            language: req.body.language
-        });
-        
-        res.write(`data: ${JSON.stringify({ done: true, task })}\n\n`);
-        res.end();
-    } catch (error) {
-        console.error('Error in streaming:', error);
-        res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
-        res.end();
+            // Если задача не получена через stream, используем fallback
+            if (!finalTask || typeof finalTask === 'string') {
+                console.log('Using fallback task generation...');
+                finalTask = await taskGenerator.generateTask({
+                    level: req.body.level || 'Middle',
+                    topic: req.body.topic || 'algorithms',
+                    language: req.body.language || 'python',
+                    previousTask: req.body.previousTask,
+                    candidatePerformance: req.body.candidatePerformance
+                });
+            }
+
+            // Убеждаемся, что возвращаем объект, а не строку
+            if (typeof finalTask === 'string') {
+                try {
+                    finalTask = JSON.parse(finalTask);
+                } catch (parseError) {
+                    console.error('Failed to parse task from stream:', parseError);
+                    finalTask = await taskGenerator.generateTask({
+                        level: req.body.level || 'Middle',
+                        topic: req.body.topic || 'algorithms',
+                        language: req.body.language || 'python',
+                        previousTask: req.body.previousTask,
+                        candidatePerformance: req.body.candidatePerformance
+                    });
+                }
+            }
+
+            res.json(finalTask);
+        } catch (error) {
+            console.error('Error in streaming (JSON mode):', error);
+            res.status(500).json({ error: error.message });
+        }
+    } else {
+        // SSE режим: стандартный streaming
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
+        try {
+            let fullContent = '';
+            let finalTask = null;
+            
+            // Генерируем задачу через стриминг
+            finalTask = await taskGenerator.generateTaskStream(req.body, (chunk, accumulated) => {
+                fullContent = accumulated;
+                res.write(`data: ${JSON.stringify({ chunk, accumulated })}\n\n`);
+            });
+
+            // После завершения отправляем финальную задачу
+            if (finalTask) {
+                res.write(`data: ${JSON.stringify({ done: true, task: finalTask })}\n\n`);
+            } else {
+                // Fallback: если задача не получена, пытаемся сгенерировать через обычный метод
+                const fallbackTask = await taskGenerator.generateTask({
+                    level: req.body.level || 'Middle',
+                    topic: req.body.topic || 'algorithms',
+                    language: req.body.language || 'python',
+                    previousTask: req.body.previousTask,
+                    candidatePerformance: req.body.candidatePerformance
+                });
+                res.write(`data: ${JSON.stringify({ done: true, task: fallbackTask })}\n\n`);
+            }
+            res.end();
+        } catch (error) {
+            console.error('Error in streaming:', error);
+            res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+            res.end();
+        }
     }
 });
 
@@ -314,16 +416,38 @@ app.post('/api/tests/run', async (req, res) => {
         const allPassed = visibleResults.cases.every(t => t.passed) &&
           hiddenResults.cases.every(t => t.passed);
 
+        // Улучшенные метрики производительности
+        const totalHiddenTime = hiddenResults.stats.totalTime || 0;
+        const averageHiddenTime = hiddenResults.stats.averageTime || 0;
+        const maxExecutionTime = Math.max(
+          ...visibleResults.cases.map(t => t.executionTime || 0),
+          ...hiddenResults.cases.map(t => t.executionTime || 0)
+        );
+        const minExecutionTime = Math.min(
+          ...visibleResults.cases.map(t => t.executionTime || 0),
+          ...hiddenResults.cases.map(t => t.executionTime || 0)
+        );
+
         res.json({
           visible: visibleResults.cases,
           hidden: hiddenResults.cases.map(test => ({
             passed: test.passed,
             executionTime: test.executionTime,
-            timedOut: test.timedOut
+            timedOut: test.timedOut,
+            input: test.input,
+            expected: test.expected,
+            actual: test.actual
           })),
           performance: {
             totalVisibleTime: visibleResults.stats.totalTime,
-            averageVisibleTime: visibleResults.stats.averageTime
+            averageVisibleTime: visibleResults.stats.averageTime,
+            totalHiddenTime: totalHiddenTime,
+            averageHiddenTime: averageHiddenTime,
+            maxExecutionTime: maxExecutionTime,
+            minExecutionTime: minExecutionTime,
+            totalTests: visibleResults.cases.length + hiddenResults.cases.length,
+            passedTests: visibleResults.cases.filter(t => t.passed).length + 
+                        hiddenResults.cases.filter(t => t.passed).length
           },
           allPassed
         });
@@ -361,6 +485,24 @@ app.post('/api/solutions/analyze-error', async (req, res) => {
         res.json(errorAnalysis);
     } catch (error) {
         console.error('Error analyzing error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Генерация подсказки
+app.post('/api/hints/generate', async (req, res) => {
+    try {
+        const hint = await solutionAnalyzer.generateHint({
+            type: req.body.type || 'task',
+            task: req.body.task || {},
+            code: req.body.code || '',
+            question: req.body.question || '',
+            analysis: req.body.analysis || {},
+            chatHistory: req.body.chatHistory || []
+        });
+        res.json({ hint });
+    } catch (error) {
+        console.error('Error generating hint:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -487,7 +629,8 @@ app.post('/api/chat/evaluate', async (req, res) => {
         const evaluation = await solutionAnalyzer.evaluateAnswer({
             question: req.body.question,
             answer: req.body.answer,
-            solution: req.body.solution
+            solution: req.body.solution,
+            context: req.body.context || {}
         });
         res.json(evaluation);
     } catch (error) {
@@ -677,6 +820,27 @@ app.get('/api/admin/candidates', (req, res) => {
   const { status } = req.query;
   const list = status ? adminData.candidates.filter(c => c.status === status) : adminData.candidates;
   res.json(list);
+});
+
+app.post('/api/admin/candidates', (req, res) => {
+  const { firstName, patronymic } = req.body || {};
+  if (!firstName || !patronymic) {
+    return res.status(400).json({ error: 'firstName and patronymic are required' });
+  }
+
+  try {
+    const candidateCard = buildCandidateCard(req.body || {});
+    adminData.candidates.unshift(candidateCard);
+    adminData.stats.totalInterviews = Math.max(
+      adminData.stats.totalInterviews || 0,
+      adminData.candidates.length
+    );
+    persistAdminData(adminData);
+    res.status(201).json(candidateCard);
+  } catch (error) {
+    console.error('Failed to create candidate card:', error);
+    res.status(500).json({ error: 'Failed to create candidate card' });
+  }
 });
 
 app.post('/api/admin/reports', (req, res) => {

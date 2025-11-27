@@ -1,0 +1,209 @@
+{
+  "timestamp": "2025-11-27T06:23:40.598Z",
+  "total": 9,
+  "passed": 9,
+  "failed": 0,
+  "tests": [
+    {
+      "name": "File Structure",
+      "passed": true,
+      "message": "Все необходимые файлы на месте",
+      "details": null
+    },
+    {
+      "name": "Backend Connection",
+      "passed": true,
+      "message": "Backend отвечает (статус: 404)",
+      "details": null
+    },
+    {
+      "name": "Task Generation",
+      "passed": "task_1764224583092_960s6hm2d",
+      "message": "Задача успешно сгенерирована",
+      "details": {
+        "taskId": "task_1764224583092_960s6hm2d",
+        "description": "Найдите в массиве максимальный элемент"
+      }
+    },
+    {
+      "name": "Code Execution",
+      "passed": {
+        "stdout": "",
+        "stderr": "",
+        "exitCode": 0,
+        "timedOut": false,
+        "executionTime": 26
+      },
+      "message": "Код успешно выполнен",
+      "details": {
+        "stdout": "",
+        "stderr": "",
+        "exitCode": 0,
+        "timedOut": false,
+        "executionTime": 26
+      }
+    },
+    {
+      "name": "Test Runner",
+      "passed": {
+        "visible": [],
+        "hidden": [],
+        "allPassed": false,
+        "message": "Для этой задачи не настроены автоматические тесты"
+      },
+      "message": "Тесты успешно запущены",
+      "details": {
+        "visible": [],
+        "hidden": [],
+        "allPassed": false,
+        "message": "Для этой задачи не настроены автоматические тесты"
+      }
+    },
+    {
+      "name": "Solution Analysis",
+      "passed": {
+        "correctness": 85,
+        "optimality": 70,
+        "codeQuality": 80,
+        "timeComplexity": "O(1)",
+        "spaceComplexity": "O(1)",
+        "feedback": "Решение кажется правильным, но не проходит скрытые тесты. Возможно, есть ограничения на входные данные или специфические условия, которые не учтены. Функция умножения на 2 реализована корректно, но может быть оптимизирована. Код написан понятно и лаконично, но можно добавить комментарии для ясности.",
+        "strengths": [
+          "Четкая и простая реализация",
+          "Корректное применение операции умножения",
+          "Хорошее имя функции"
+        ],
+        "weaknesses": [
+          "Не проходит скрытые тесты",
+          "Возможно, не обрабатывает крайние случаи",
+          "Можно использовать побитовый сдвиг для оптимизации"
+        ],
+        "suggestions": [
+          "Проверить, какие входные данные вызывают ошибку в скрытых тестах",
+          "Добавить обработку возможных исключений или ограничений",
+          "Рассмотреть использование побитового сдвига (x << 1) вместо умножения для повышения производительности",
+          "Добавить комментарии к коду для пояснения логики"
+        ],
+        "overallScore": 80
+      },
+      "message": "Решение успешно проанализировано",
+      "details": {
+        "correctness": 85,
+        "optimality": 70,
+        "codeQuality": 80,
+        "timeComplexity": "O(1)",
+        "spaceComplexity": "O(1)",
+        "feedback": "Решение кажется правильным, но не проходит скрытые тесты. Возможно, есть ограничения на входные данные или специфические условия, которые не учтены. Функция умножения на 2 реализована корректно, но может быть оптимизирована. Код написан понятно и лаконично, но можно добавить комментарии для ясности.",
+        "strengths": [
+          "Четкая и простая реализация",
+          "Корректное применение операции умножения",
+          "Хорошее имя функции"
+        ],
+        "weaknesses": [
+          "Не проходит скрытые тесты",
+          "Возможно, не обрабатывает крайние случаи",
+          "Можно использовать побитовый сдвиг для оптимизации"
+        ],
+        "suggestions": [
+          "Проверить, какие входные данные вызывают ошибку в скрытых тестах",
+          "Добавить обработку возможных исключений или ограничений",
+          "Рассмотреть использование побитового сдвига (x << 1) вместо умножения для повышения производительности",
+          "Добавить комментарии к коду для пояснения логики"
+        ],
+        "overallScore": 80
+      }
+    },
+    {
+      "name": "Chat Question",
+      "passed": {
+        "question": "<think>\nOkay, let's see. The candidate's solution is a function that returns x multiplied by 2. The problem's analysis says the solution is incorrect. But why? The user didn't provide the actual problem statement, so I need to figure out what the intended task was.\n\nSince the solution is x*2, maybe the problem was to do something else, like check for a condition or process the input in a different way. For example, if the problem was to return the square of x, then x*2 is wrong. Or perhaps the problem required a more complex algorithm, and the candidate oversimplified it.\n\nBut the user's analysis says correctness is 0/100. That suggests the solution doesn't handle any cases correctly. Maybe the problem involved edge cases that the candidate didn't address. For instance, if the problem required handling negative numbers, zero, or specific data types, the multiplication approach might fail.\n\nAlternatively, the problem might have required a different approach altogether, like recursion or using specific data structures. The candidate's solution is a direct computation, so"
+      },
+      "message": "Вопрос успешно сгенерирован",
+      "details": {
+        "question": "<think>\nOkay, let's see. The candidate's solution is a function that returns x multiplied by 2. The problem's analysis says the solution is incorrect. But why? The user didn't provide the actual problem statement, so I need to figure out what the intended task was.\n\nSince the solution is x*2, maybe the problem was to do something else, like check for a condition or process the input in a different way. For example, if the problem was to return the square of x, then x*2 is wrong. Or perhaps the problem required a more complex algorithm, and the candidate oversimplified it.\n\nBut the user's analysis says correctness is 0/100. That suggests the solution doesn't handle any cases correctly. Maybe the problem involved edge cases that the candidate didn't address. For instance, if the problem required handling negative numbers, zero, or specific data types, the multiplication approach might fail.\n\nAlternatively, the problem might have required a different approach altogether, like recursion or using specific data structures. The candidate's solution is a direct computation, so"
+      }
+    },
+    {
+      "name": "Report Generation",
+      "passed": {
+        "sessionId": "session_1764224606533",
+        "candidateId": "demo_candidate",
+        "generatedAt": "2025-11-27T06:23:40.594Z",
+        "summary": {
+          "totalTasks": 1,
+          "totalTime": 120,
+          "successRate": 100,
+          "averageScores": {
+            "correctness": 0,
+            "optimality": 0,
+            "codeQuality": 0
+          }
+        },
+        "strengths": [
+          "Хорошее понимание основных концепций",
+          "Умение структурировать ответы"
+        ],
+        "weaknesses": [
+          "Недостаточное знание продвинутых тем",
+          "Слабое управление временем"
+        ],
+        "detailedAnalysis": "Кандидат продемонстрировал хорошее понимание основных концепций в ходе интервью, показав способность логично структурировать свои ответы. Однако при ответе на более сложные вопросы сталкивался с трудностями, что указывает на необходимость углубления знаний в продвинутых областях. Также наблюдается тенденция к затяжным ответам, что может свидетельствовать о слабом управлении временем. Оценка за выполнение задачи составила 85 баллов, что говорит о высоком, но не идеальном уровне подготовки.",
+        "recommendations": [
+          "Регулярно изучать продвинутые темы и концепции в своей области",
+          "Практиковать ответы на вопросы в условиях ограничения времени"
+        ],
+        "overallAssessment": "Кандидат показал хорошие базовые знания и организованность в ответах, но для повышения конкурентоспособности рекомендуется углубить понимание сложных тем и улучшить управление временем.",
+        "scores": {
+          "technical": 0,
+          "communication": 0,
+          "overall": 0
+        }
+      },
+      "message": "Отчет успешно сгенерирован",
+      "details": {
+        "sessionId": "session_1764224606533",
+        "candidateId": "demo_candidate",
+        "generatedAt": "2025-11-27T06:23:40.594Z",
+        "summary": {
+          "totalTasks": 1,
+          "totalTime": 120,
+          "successRate": 100,
+          "averageScores": {
+            "correctness": 0,
+            "optimality": 0,
+            "codeQuality": 0
+          }
+        },
+        "strengths": [
+          "Хорошее понимание основных концепций",
+          "Умение структурировать ответы"
+        ],
+        "weaknesses": [
+          "Недостаточное знание продвинутых тем",
+          "Слабое управление временем"
+        ],
+        "detailedAnalysis": "Кандидат продемонстрировал хорошее понимание основных концепций в ходе интервью, показав способность логично структурировать свои ответы. Однако при ответе на более сложные вопросы сталкивался с трудностями, что указывает на необходимость углубления знаний в продвинутых областях. Также наблюдается тенденция к затяжным ответам, что может свидетельствовать о слабом управлении временем. Оценка за выполнение задачи составила 85 баллов, что говорит о высоком, но не идеальном уровне подготовки.",
+        "recommendations": [
+          "Регулярно изучать продвинутые темы и концепции в своей области",
+          "Практиковать ответы на вопросы в условиях ограничения времени"
+        ],
+        "overallAssessment": "Кандидат показал хорошие базовые знания и организованность в ответах, но для повышения конкурентоспособности рекомендуется углубить понимание сложных тем и улучшить управление временем.",
+        "scores": {
+          "technical": 0,
+          "communication": 0,
+          "overall": 0
+        }
+      }
+    },
+    {
+      "name": "Admin Data",
+      "passed": true,
+      "message": "Админ-данные корректны",
+      "details": {
+        "tasksCount": 4,
+        "hasSettings": true
+      }
+    }
+  ],
+  "passRate": 100
+}

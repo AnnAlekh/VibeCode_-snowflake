@@ -218,31 +218,90 @@ ${previousAnswer || 'Ответ недоступен'}
 Формат: 1–2 предложения на русском языке, заканчивающиеся вопросительным знаком. Вопрос должен быть завершающим и показывать финальную оценку понимания.
   `,
 
-  evaluateAnswer: (question, answer, solution) => `
-Оцени ответ кандидата на твой вопрос.
+  evaluateAnswer: ({ question, answer, solution, context = {} }) => `
+Ты технический интервьюер, который фиксирует качество общения кандидата. Будь последовательным, всегда думай на русском языке.
 
-Вопрос: ${question}
-Ответ кандидата: ${answer}
-Их решение: ${solution}
+Вопрос интервьюера: ${question}
 
-Оцени:
-1. Score (0-100): Общее качество ответа
-2. Understanding (0-100): Насколько хорошо кандидат понимает свое решение
-3. Communication (0-100): Ясность объяснения
-4. Feedback: Конструктивная обратная связь
-5. Details: Детали оценки
-6. IsSufficient (true/false): Достаточен ли ответ для определения уровня кандидата? Ответ считается недостаточным, если understanding < 70 или communication < 70 или score < 70
+Ответ кандидата:
+${answer}
 
-Верни ТОЛЬКО валидный JSON:
+Фрагмент их решения:
+\`\`\`python
+${solution}
+\`\`\`
+
+Контекст задачи и анализа (JSON):
+${JSON.stringify({
+  task: context.task || {},
+  analysis: context.analysis || {},
+  testResults: context.testResults || {},
+  metrics: context.metrics || {},
+  stageDurations: context.stageDurations || {},
+  antiCheat: context.antiCheat || {},
+  questionType: context.questionType || 'follow-up'
+}, null, 2)}
+
+Инструкции по оценке:
+1. Score отражает полноту и уверенность ответа относительно вопроса и кода.
+2. Understanding показывает глубину технического понимания (граничные случаи, trade-off, связь с кодом).
+3. Communication измеряет структурированность: ввод → шаги → вывод, логичность русского языка.
+4. Feedback должен содержать конкретный совет, что улучшить в следующем ответе.
+5. Details включают массив strengths/weaknesses и список конкретных наблюдений.
+6. IsSufficient = true только если ответ даёт ясное понимание уровня кандидата. Если хотя бы одна метрика ниже порога — возвращай false и поясни причину в details.reason.
+
+Адаптивные пороги:
+- Базово score ≥ 70, understanding ≥ 70, communication ≥ 70.
+- Если metrics.scoreTrend === "improving", допускается score ≥ 65 и understanding ≥ 65.
+- Если было больше 1 дополнительного вопроса или attemptsForCurrentTask > 1, подними пороги до 75.
+- Если кандидат чётко структурировал речь (communication ≥ 85), допускается understanding ≥ 65.
+
+Шкала:
+- 90-100: ответ исчерпывающий, кандидат цитирует код, аргументирует сложность, уверенная речь.
+- 80-89: хороший ответ, но упущена 1 деталь или не раскрыты trade-off.
+- 70-79: достаточный, но поверхностный, мало ссылок на код.
+- 50-69: неполный ответ, нет граничных случаев, путаное объяснение.
+- <50: ответ мимо вопроса или противоречивый.
+
+Пример сильного ответа (исправь значения под текущий случай):
 {
-  "score": 85,
+  "score": 92,
   "understanding": 90,
-  "communication": 80,
-  "feedback": "Хорошее понимание решения, но можно улучшить объяснение...",
+  "communication": 88,
+  "feedback": "Четко объяснили выбор структуры данных и сложность.",
   "isSufficient": true,
   "details": {
-    "strengths": ["Понимает алгоритм", "Может объяснить сложность"],
-    "weaknesses": ["Не упомянул альтернативные решения"]
+    "strengths": ["Пошаговое объяснение", "Связь с кодом"],
+    "weaknesses": [],
+    "reason": "Все ключевые аспекты раскрыты"
+  }
+}
+
+Пример недостаточного ответа:
+{
+  "score": 58,
+  "understanding": 55,
+  "communication": 62,
+  "feedback": "Не упомянули, как решение ведет себя на граничных данных.",
+  "isSufficient": false,
+  "details": {
+    "strengths": ["Указан базовый подход"],
+    "weaknesses": ["Нет анализа сложности", "Нет привязки к коду"],
+    "reason": "Метрики ниже порога, отсутствует детальное понимание"
+  }
+}
+
+Верни ТОЛЬКО валидный JSON в формате:
+{
+  "score": number,
+  "understanding": number,
+  "communication": number,
+  "feedback": "текст",
+  "isSufficient": true/false,
+  "details": {
+    "strengths": [],
+    "weaknesses": [],
+    "reason": "краткое объяснение решения по sufficiency"
   }
 }
   `,
@@ -364,6 +423,42 @@ ${conversationSummary}
 
 Ответь вовлекающе и задай следующий вопрос, если уместно.
   `,
+
+  generateHint: ({ type = 'task', task = {}, code = '', question = '', analysis = {}, chatHistory = [] }) => {
+    const requirements = Array.isArray(task.requirements) ? task.requirements.join(', ') : (task.requirements || '');
+    const recentChat = Array.isArray(chatHistory) ? chatHistory.slice(-3) : [];
+    const historySection = recentChat.length
+      ? `\nНедавние ответы кандидата:\n${recentChat.map(msg => `${msg.role === 'assistant' ? 'Интервьюер' : 'Кандидат'}: ${msg.content}`).join('\n')}`
+      : '';
+    const analysisSection = analysis && (analysis.correctness || analysis.optimality || (analysis.weaknesses || []).length)
+      ? `\nАнализ решения: правильность ${analysis.correctness ?? '—'}, оптимальность ${analysis.optimality ?? '—'}, слабые стороны: ${(analysis.weaknesses || []).join(', ') || 'не указаны'}.`
+      : '';
+    const questionSection = type === 'question'
+      ? `\nТекущий вопрос интервьюера: ${question || 'не задан'}`
+      : '';
+    const codeSection = type === 'task'
+      ? `\nПоследний вариант кода кандидата (может быть неполным):\n${code || 'код не предоставлен'}`
+      : '';
+
+    return `
+Ты опытный ментор по алгоритмам и даешь очень точные, но краткие подсказки на русском языке.
+
+Задача: ${task.title || task.id || task.description || task.task || 'описание недоступно'}
+${requirements ? `Требования: ${requirements}` : ''}
+${analysisSection}
+${historySection}
+${questionSection}
+${codeSection}
+
+Правила:
+- Сформулируй 1 подсказку длиной до двух предложений.
+- Не раскрывай готового решения и не цитируй полный код.
+- Направь кандидата на идею (например, структуру данных, граничный случай, порядок действий).
+- Если данных недостаточно, посоветуй, что проверить, но не говори "нет данных".
+
+Верни только текст подсказки без вступительных слов вроде "подсказка:".
+    `;
+  },
 
   generateReport: (taskHistory, chatHistory, metrics) => `
 Сгенерируй комплексный отчет об интервью.
