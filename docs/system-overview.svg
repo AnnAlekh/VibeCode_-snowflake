@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="780" viewBox="0 0 1440 780">
+  <defs>
+    <linearGradient id="overview-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7fbff"/>
+      <stop offset="1" stop-color="#fff7f2"/>
+    </linearGradient>
+    <style>
+      .title { font: 700 32px "Segoe UI", Arial, sans-serif; fill: #12263f; }
+      .section { font: 600 20px "Segoe UI", Arial, sans-serif; fill: #183f6d; }
+      .label { font: 600 16px "Segoe UI", Arial, sans-serif; fill: #12263f; }
+      .desc { font: 500 13px "Segoe UI", Arial, sans-serif; fill: #24354a; }
+      .panel { rx: 18; ry: 18; stroke-width: 2; }
+      .arrow { stroke: #2f4c63; stroke-width: 2.2; fill: none; marker-end: url(#arrow); }
+      .chip { font: 600 12px "Segoe UI", Arial, sans-serif; fill: #12263f; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2f4c63"/>
+    </marker>
+  </defs>
+
+  <rect width="1440" height="780" fill="url(#overview-bg)"/>
+  <text x="720" y="60" text-anchor="middle" class="title">Системный обзор VibeCode AI Interviewer</text>
+
+  <!-- Experience Layer -->
+  <rect x="60" y="110" width="380" height="540" class="panel" fill="#e8f2ff" stroke="#2e6de0"/>
+  <text x="250" y="150" class="section" text-anchor="middle">Experience Layer</text>
+  <g>
+    <rect x="90" y="180" width="320" height="90" rx="14" ry="14" fill="#fff" stroke="#9ec2ff"/>
+    <text x="250" y="214" class="label" text-anchor="middle">Electron App</text>
+    <text x="250" y="236" class="desc" text-anchor="middle">desktop shell + IPC</text>
+  </g>
+  <g>
+    <rect x="90" y="290" width="320" height="90" rx="14" ry="14" fill="#fff" stroke="#9ec2ff"/>
+    <text x="250" y="324" class="label" text-anchor="middle">Web Client (SPA)</text>
+    <text x="250" y="346" class="desc" text-anchor="middle">Monaco IDE, UI modules</text>
+  </g>
+  <g>
+    <rect x="90" y="400" width="320" height="90" rx="14" ry="14" fill="#fff" stroke="#9ec2ff"/>
+    <text x="250" y="434" class="label" text-anchor="middle">Demo & Presentation</text>
+    <text x="250" y="456" class="desc" text-anchor="middle">CLI scripts, guides, scenario runners</text>
+  </g>
+  <g>
+    <rect x="90" y="510" width="320" height="110" rx="14" ry="14" fill="#fff" stroke="#9ec2ff"/>
+    <text x="250" y="544" class="label" text-anchor="middle">Interview Core UI</text>
+    <text x="250" y="566" class="desc" text-anchor="middle">chat-manager · metrics · anti-cheat</text>
+    <text x="250" y="586" class="desc" text-anchor="middle">report-manager · task renderer</text>
+  </g>
+
+  <!-- Backend -->
+  <rect x="470" y="110" width="420" height="540" class="panel" fill="#fff4e7" stroke="#f08a00"/>
+  <text x="680" y="150" class="section" text-anchor="middle">Backend (ai-interviewer)</text>
+  <g>
+    <rect x="500" y="180" width="360" height="90" rx="14" ry="14" fill="#fff" stroke="#f5b576"/>
+    <text x="680" y="214" class="label" text-anchor="middle">REST API & Orchestrator</text>
+    <text x="680" y="236" class="desc" text-anchor="middle">Express routes, session manager</text>
+  </g>
+  <g>
+    <rect x="500" y="290" width="360" height="90" rx="14" ry="14" fill="#fff" stroke="#f5b576"/>
+    <text x="680" y="324" class="label" text-anchor="middle">LLM Client & Task Engine</text>
+    <text x="680" y="346" class="desc" text-anchor="middle">task-generator, solution-analyzer</text>
+  </g>
+  <g>
+    <rect x="500" y="400" width="360" height="90" rx="14" ry="14" fill="#fff" stroke="#f5b576"/>
+    <text x="680" y="434" class="label" text-anchor="middle">Adaptive Engine</text>
+    <text x="680" y="456" class="desc" text-anchor="middle">level-assessor + adaptive-selector</text>
+  </g>
+  <g>
+    <rect x="500" y="510" width="360" height="130" rx="14" ry="14" fill="#fff" stroke="#f5b576"/>
+    <text x="680" y="544" class="label" text-anchor="middle">Runtime & Reports</text>
+    <text x="680" y="566" class="desc" text-anchor="middle">sandbox executor (python/js)</text>
+    <text x="680" y="588" class="desc" text-anchor="middle">report-generator, metrics</text>
+  </g>
+
+  <!-- External -->
+  <rect x="910" y="110" width="420" height="540" class="panel" fill="#f5f5f5" stroke="#7c8b94"/>
+  <text x="1120" y="150" class="section" text-anchor="middle">External Providers</text>
+  <g>
+    <rect x="940" y="180" width="360" height="120" rx="14" ry="14" fill="#fff" stroke="#b7c2c8"/>
+    <text x="1120" y="220" class="label" text-anchor="middle">Scibox LLM (qwen3-32b-awq)</text>
+    <text x="1120" y="242" class="desc" text-anchor="middle">OpenAI-compatible API, streaming</text>
+    <text x="1120" y="262" class="desc" text-anchor="middle">fallback logic, caching</text>
+  </g>
+  <g>
+    <rect x="940" y="330" width="360" height="120" rx="14" ry="14" fill="#fff" stroke="#b7c2c8"/>
+    <text x="1120" y="370" class="label" text-anchor="middle">Artifact & Storage</text>
+    <text x="1120" y="392" class="desc" text-anchor="middle">reports, logs, temporary files</text>
+  </g>
+  <g>
+    <rect x="940" y="480" width="360" height="120" rx="14" ry="14" fill="#fff" stroke="#b7c2c8"/>
+    <text x="1120" y="520" class="label" text-anchor="middle">Infra & Monitoring</text>
+    <text x="1120" y="542" class="desc" text-anchor="middle">Docker Compose, health checks</text>
+    <text x="1120" y="562" class="desc" text-anchor="middle">ai-interviewer-network</text>
+  </g>
+
+  <!-- Flows -->
+  <path class="arrow" d="M440 225 L500 225"/>
+  <text class="desc" x="470" y="205">HTTP/IPC</text>
+
+  <path class="arrow" d="M440 335 L500 335"/>
+  <text class="desc" x="470" y="315">REST/WS</text>
+
+  <path class="arrow" d="M440 445 L500 445"/>
+  <text class="desc" x="470" y="425">metrics & chat</text>
+
+  <path class="arrow" d="M860 335 L910 335"/>
+  <text class="desc" x="885" y="315">LLM calls</text>
+
+  <path class="arrow" d="M860 520 L910 520"/>
+  <text class="desc" x="885" y="500">artifacts/logs</text>
+
+  <!-- Chips -->
+  <g>
+    <rect x="90" y="40" width="150" height="30" rx="15" ry="15" fill="#e1eaff"/>
+    <text x="165" y="60" class="chip" text-anchor="middle">Node.js 20</text>
+  </g>
+  <g>
+    <rect x="250" y="40" width="140" height="30" rx="15" ry="15" fill="#ffe5cf"/>
+    <text x="320" y="60" class="chip" text-anchor="middle">Express</text>
+  </g>
+  <g>
+    <rect x="400" y="40" width="160" height="30" rx="15" ry="15" fill="#ffeede"/>
+    <text x="480" y="60" class="chip" text-anchor="middle">Vanilla JS + Monaco</text>
+  </g>
+  <g>
+    <rect x="570" y="40" width="170" height="30" rx="15" ry="15" fill="#e4f7ff"/>
+    <text x="655" y="60" class="chip" text-anchor="middle">Scibox qwen3-32b-awq</text>
+  </g>
+  <g>
+    <rect x="750" y="40" width="170" height="30" rx="15" ry="15" fill="#e3ffe9"/>
+    <text x="835" y="60" class="chip" text-anchor="middle">Docker Compose</text>
+  </g>
+  <g>
+    <rect x="930" y="40" width="200" height="30" rx="15" ry="15" fill="#f1e0ff"/>
+    <text x="1030" y="60" class="chip" text-anchor="middle">ai-interviewer-network</text>
+  </g>
+</svg>
+

@@ -1,0 +1,50 @@
+%% High-level system component diagram
+flowchart TB
+    classDef platform fill:#eef5ff,stroke:#1c5dd4,color:#0b2b5b,font-weight:bold;
+    classDef runtime fill:#fff3e0,stroke:#d2691e,color:#5a2500,font-weight:bold;
+    classDef infra fill:#f4f4f4,stroke:#7f8c8d,color:#2c3e50,font-weight:bold;
+
+    subgraph Experience["Experience Layer"]
+        Electron["Electron App"]
+        Web["Web Client"]
+        Admin["Demo/Presentation scripts"]
+    end
+    class Electron,Web,Admin platform
+
+    subgraph Interaction["Interview Core Services"]
+        Chat["Chat Manager"]
+        IDE["Monaco IDE + Task Renderer"]
+        Metrics["Metrics & Anti-cheat"]
+    end
+    class Chat,IDE,Metrics platform
+
+    subgraph Backend["Backend `ai-interviewer`"]
+        API["REST API"]
+        Adaptive["Adaptive Engine"]
+        LLMClient["LLM Client"]
+        Runtime["Sandbox Executor"]
+        Reports["Report Generator"]
+    end
+    class API,Adaptive,LLMClient,Runtime,Reports runtime
+
+    subgraph External["External Providers"]
+        Scibox["Scibox LLM"]
+        Storage["Local artifact storage"]
+    end
+    class Scibox,Storage infra
+
+    Electron -->|IPC/HTTP| API
+    Web -->|HTTP| API
+    Admin -->|CLI scripts| Backend
+    Chat --> API
+    IDE --> API
+    Metrics --> API
+
+    API --> Adaptive
+    Adaptive --> LLMClient
+    LLMClient --> Scibox
+    API --> Runtime
+    Runtime --> Storage
+    Reports --> Storage
+    API --> Reports
+

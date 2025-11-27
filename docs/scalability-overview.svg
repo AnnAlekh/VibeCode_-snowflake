@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="800" viewBox="0 0 1440 800">
+  <defs>
+    <linearGradient id="scale-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4fbff"/>
+      <stop offset="1" stop-color="#fff6f0"/>
+    </linearGradient>
+    <style>
+      .title { font: 700 34px "Segoe UI", Arial, sans-serif; fill: #10263a; }
+      .section { font: 600 20px "Segoe UI", Arial, sans-serif; fill: #153e6a; }
+      .label { font: 600 16px "Segoe UI", Arial, sans-serif; fill: #10263a; }
+      .desc { font: 500 13px "Segoe UI", Arial, sans-serif; fill: #253447; }
+      .panel { rx: 18; ry: 18; stroke-width: 2; }
+      .highlight { font: 600 14px "Segoe UI", Arial, sans-serif; fill: #0f4c3a; }
+    </style>
+  </defs>
+
+  <rect width="1440" height="800" fill="url(#scale-bg)"/>
+  <text x="720" y="60" text-anchor="middle" class="title">Масштабирование и устойчивость VibeCode AI Interviewer</text>
+
+  <!-- Stateless backend -->
+  <rect x="80" y="120" width="400" height="240" class="panel" fill="#f0f7ff" stroke="#4e8df7"/>
+  <text x="280" y="160" class="section" text-anchor="middle">Stateless Backend</text>
+  <text x="120" y="200" class="label">Node.js API + Docker</text>
+  <text x="120" y="225" class="desc">• Stateless сервис → горизонтальный автоскейлинг</text>
+  <text x="120" y="245" class="desc">• Вынос очередей/кеша во внешние сервисы</text>
+  <text x="120" y="265" class="desc">• Простая репликация интервьюеров</text>
+
+  <!-- Adaptive state -->
+  <rect x="520" y="120" width="400" height="240" class="panel" fill="#f7f1ff" stroke="#a47cf7"/>
+  <text x="720" y="160" class="section" text-anchor="middle">Adaptive State</text>
+  <text x="560" y="200" class="label">История задач (client + server)</text>
+  <text x="560" y="225" class="desc">• Синхронизация state на обеих сторонах</text>
+  <text x="560" y="245" class="desc">• Возможность вынести в распределённое хранилище</text>
+  <text x="560" y="265" class="desc">• Аналитика на уровне кластеров/команд</text>
+
+  <!-- Anti-cheat portability -->
+  <rect x="960" y="120" width="400" height="240" class="panel" fill="#fff5ea" stroke="#f0973b"/>
+  <text x="1160" y="160" class="section" text-anchor="middle">Портируемый Anti-cheat</text>
+  <text x="1000" y="200" class="label">Модули `anti-cheat` + `metrics`</text>
+  <text x="1000" y="225" class="desc">• Независимые слушатели событий</text>
+  <text x="1000" y="245" class="desc">• Rate-limit и единый API для сигналов</text>
+  <text x="1000" y="265" class="desc">• Повторное использование в Electron/desktop</text>
+
+  <!-- Healthchecks & fallback -->
+  <rect x="300" y="400" width="840" height="260" class="panel" fill="#f0fff3" stroke="#5abf4a"/>
+  <text x="720" y="440" class="section" text-anchor="middle">Устойчивость демо</text>
+  <text x="340" y="480" class="label">Health-check-и в Compose</text>
+  <text x="340" y="505" class="desc">• Мониторинг backend/frontend, автоматический рестарт</text>
+  <text x="340" y="525" class="desc">• Фокус на стабильности демо-сценариев</text>
+  <text x="780" y="480" class="label">LLM fallback</text>
+  <text x="780" y="505" class="desc">• Streaming → sync → cached responses</text>
+  <text x="780" y="525" class="desc">• Переключение при частичных отказах API</text>
+  <text x="720" y="570" class="highlight" text-anchor="middle">В итоге: демо продолжает работать даже при сбоях LLM или отдельных сервисов</text>
+
+  <!-- Connections -->
+  <line x1="480" y1="240" x2="520" y2="240" stroke="#5c6a7d" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="500" y="220" class="desc" text-anchor="middle">shared state</text>
+  <line x1="920" y1="240" x2="960" y2="240" stroke="#5c6a7d" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="940" y="220" class="desc" text-anchor="middle">independent modules</text>
+
+  <!-- Tags -->
+  <rect x="90" y="40" width="170" height="28" rx="14" ry="14" fill="#e1edff"/>
+  <text x="175" y="60" class="label" font-size="13" text-anchor="middle">Horizontal scaling</text>
+  <rect x="280" y="40" width="200" height="28" rx="14" ry="14" fill="#efe2ff"/>
+  <text x="380" y="60" class="label" font-size="13" text-anchor="middle">Distributed state readiness</text>
+  <rect x="510" y="40" width="200" height="28" rx="14" ry="14" fill="#ffe8d3"/>
+  <text x="610" y="60" class="label" font-size="13" text-anchor="middle">Modular anti-cheat</text>
+  <rect x="740" y="40" width="220" height="28" rx="14" ry="14" fill="#e6ffe9"/>
+  <text x="850" y="60" class="label" font-size="13" text-anchor="middle">Resilient demo pipeline</text>
+</svg>
+

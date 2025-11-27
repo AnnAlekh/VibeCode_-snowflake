@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4f8ff"/>
+      <stop offset="1" stop-color="#fff8f3"/>
+    </linearGradient>
+    <style>
+      .title { font: 700 34px "Segoe UI", Arial, sans-serif; fill: #10263e; }
+      .section { font: 600 22px "Segoe UI", Arial, sans-serif; fill: #143f6b; }
+      .label { font: 600 18px "Segoe UI", Arial, sans-serif; fill: #10263e; }
+      .desc { font: 500 14px "Segoe UI", Arial, sans-serif; fill: #1f3550; }
+      .chip { font: 600 12px "Segoe UI", Arial, sans-serif; fill: #10263e; }
+      .panel { rx: 18; ry: 18; stroke-width: 2; }
+      .arrow { stroke: #1f3f59; stroke-width: 2.4; fill: none; marker-end: url(#arrow); }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1f3f59"/>
+    </marker>
+  </defs>
+  <rect width="1440" height="820" fill="url(#bg)"/>
+  <text x="720" y="70" text-anchor="middle" class="title">VibeCode AI Interviewer · Архитектура и стек</text>
+
+  <!-- Backend -->
+  <rect x="60" y="110" width="420" height="580" class="panel" fill="#e8f1ff" stroke="#3c6df0"/>
+  <text x="270" y="150" class="section" text-anchor="middle">Backend (Node.js + Express)</text>
+  <g>
+    <rect x="90" y="180" width="360" height="110" rx="14" ry="14" fill="#fff" stroke="#9fb9ff"/>
+    <text x="270" y="215" class="label" text-anchor="middle">LLM Client (`src/llm`)</text>
+    <text x="270" y="239" class="desc" text-anchor="middle">OpenAI-compatible, streaming &amp; retries</text>
+    <text x="270" y="263" class="desc" text-anchor="middle">Scibox · qwen3-32b-awq</text>
+  </g>
+  <g>
+    <rect x="90" y="310" width="360" height="110" rx="14" ry="14" fill="#fff" stroke="#9fb9ff"/>
+    <text x="270" y="345" class="label" text-anchor="middle">Task Generator &amp; Analyzer</text>
+    <text x="270" y="369" class="desc" text-anchor="middle">`task-generator.js`, `solution-analyzer.js`</text>
+    <text x="270" y="393" class="desc" text-anchor="middle">JSON-промпты, тесты, объяснения</text>
+  </g>
+  <g>
+    <rect x="90" y="440" width="360" height="110" rx="14" ry="14" fill="#fff" stroke="#9fb9ff"/>
+    <text x="270" y="475" class="label" text-anchor="middle">Adaptive Engine (`src/core`)</text>
+    <text x="270" y="499" class="desc" text-anchor="middle">Level assessor + adaptive selector</text>
+    <text x="270" y="523" class="desc" text-anchor="middle">Пересчёт уровня, выбор темы</text>
+  </g>
+  <g>
+    <rect x="90" y="570" width="360" height="90" rx="14" ry="14" fill="#fff" stroke="#9fb9ff"/>
+    <text x="270" y="605" class="label" text-anchor="middle">REST API + Sandbox executor</text>
+    <text x="270" y="629" class="desc" text-anchor="middle">Express endpoints · python/js sandbox</text>
+  </g>
+
+  <!-- Frontend -->
+  <rect x="510" y="110" width="420" height="580" class="panel" fill="#fff5e7" stroke="#f08c00"/>
+  <text x="720" y="150" class="section" text-anchor="middle">Frontend (Vanilla JS + Monaco)</text>
+  <g>
+    <rect x="540" y="180" width="360" height="110" rx="14" ry="14" fill="#fff" stroke="#f4b778"/>
+    <text x="720" y="215" class="label" text-anchor="middle">SPA `web-app`</text>
+    <text x="720" y="239" class="desc" text-anchor="middle">app.js, modules/state, screen-manager</text>
+  </g>
+  <g>
+    <rect x="540" y="310" width="360" height="110" rx="14" ry="14" fill="#fff" stroke="#f4b778"/>
+    <text x="720" y="345" class="label" text-anchor="middle">Monaco IDE + Tests</text>
+    <text x="720" y="369" class="desc" text-anchor="middle">monaco-manager, task-renderer, api</text>
+  </g>
+  <g>
+    <rect x="540" y="440" width="360" height="110" rx="14" ry="14" fill="#fff" stroke="#f4b778"/>
+    <text x="720" y="475" class="label" text-anchor="middle">Report &amp; Anti-cheat</text>
+    <text x="720" y="499" class="desc" text-anchor="middle">report-manager, anti-cheat, logger</text>
+  </g>
+  <g>
+    <rect x="540" y="570" width="360" height="90" rx="14" ry="14" fill="#fff" stroke="#f4b778"/>
+    <text x="720" y="605" class="label" text-anchor="middle">Realtime UI &amp; Chat</text>
+    <text x="720" y="629" class="desc" text-anchor="middle">chat-manager, metrics-manager</text>
+  </g>
+
+  <!-- LLM integration -->
+  <rect x="960" y="110" width="420" height="270" class="panel" fill="#f0f9ff" stroke="#4db3ff"/>
+  <text x="1170" y="150" class="section" text-anchor="middle">LLM интеграция · Scibox</text>
+  <g>
+    <rect x="990" y="190" width="360" height="170" rx="14" ry="14" fill="#fff" stroke="#a6ddff"/>
+    <text x="1170" y="225" class="label" text-anchor="middle">qwen3-32b-awq</text>
+    <text x="1170" y="249" class="desc" text-anchor="middle">OpenAI-compatible endpoint</text>
+    <text x="1170" y="273" class="desc" text-anchor="middle">Streaming → fallback → cache</text>
+    <text x="1170" y="297" class="desc" text-anchor="middle">Задачи · Анализ · Отчеты · Диалог</text>
+  </g>
+
+  <!-- Infra -->
+  <rect x="960" y="400" width="420" height="290" class="panel" fill="#f0fff3" stroke="#5abf4e"/>
+  <text x="1170" y="440" class="section" text-anchor="middle">Инфраструктура</text>
+  <g>
+    <rect x="990" y="470" width="360" height="110" rx="14" ry="14" fill="#fff" stroke="#a8e7a1"/>
+    <text x="1170" y="505" class="label" text-anchor="middle">Docker Compose</text>
+    <text x="1170" y="529" class="desc" text-anchor="middle">backend + frontend containers, healthchecks</text>
+    <text x="1170" y="553" class="desc" text-anchor="middle">единая сеть `ai-interviewer-network`</text>
+  </g>
+  <g>
+    <rect x="990" y="600" width="360" height="70" rx="14" ry="14" fill="#fff" stroke="#a8e7a1"/>
+    <text x="1170" y="635" class="label" text-anchor="middle">Скрипты &amp; мониторинг</text>
+    <text x="1170" y="657" class="desc" text-anchor="middle">RUN_PROTOTYPE, TEST_RUNNER, health-checks</text>
+  </g>
+
+  <!-- Arrows -->
+  <path class="arrow" d="M520 235 L450 235"/>
+  <text class="desc" x="485" y="215">REST/WS</text>
+
+  <path class="arrow" d="M520 365 L450 365"/>
+  <text class="desc" x="485" y="345">задачи / тесты</text>
+
+  <path class="arrow" d="M520 495 L450 495"/>
+  <text class="desc" x="485" y="475">анализ / отчет</text>
+
+  <path class="arrow" d="M900 235 L960 235"/>
+  <text class="desc" x="930" y="215">LLM запросы</text>
+
+  <path class="arrow" d="M900 520 L960 520"/>
+  <text class="desc" x="930" y="500">docker network</text>
+
+  <path class="arrow" d="M1180 350 L1180 400"/>
+  <text class="desc" x="1205" y="375">streaming output</text>
+
+  <!-- Chips -->
+  <g>
+    <rect x="80" y="40" width="150" height="30" rx="15" ry="15" fill="#e0e9ff"/>
+    <text x="155" y="60" class="chip" text-anchor="middle">Node.js 20</text>
+  </g>
+  <g>
+    <rect x="240" y="40" width="140" height="30" rx="15" ry="15" fill="#ffe5cf"/>
+    <text x="310" y="60" class="chip" text-anchor="middle">Express</text>
+  </g>
+  <g>
+    <rect x="390" y="40" width="160" height="30" rx="15" ry="15" fill="#ffeede"/>
+    <text x="470" y="60" class="chip" text-anchor="middle">Vanilla JS</text>
+  </g>
+  <g>
+    <rect x="560" y="40" width="170" height="30" rx="15" ry="15" fill="#ffe7ce"/>
+    <text x="645" y="60" class="chip" text-anchor="middle">Monaco Editor</text>
+  </g>
+  <g>
+    <rect x="740" y="40" width="180" height="30" rx="15" ry="15" fill="#e1f6ff"/>
+    <text x="830" y="60" class="chip" text-anchor="middle">Scibox qwen3-32b-awq</text>
+  </g>
+  <g>
+    <rect x="930" y="40" width="190" height="30" rx="15" ry="15" fill="#e0ffea"/>
+    <text x="1025" y="60" class="chip" text-anchor="middle">Docker Compose</text>
+  </g>
+  <g>
+    <rect x="1130" y="40" width="190" height="30" rx="15" ry="15" fill="#f1e0ff"/>
+    <text x="1225" y="60" class="chip" text-anchor="middle">ai-interviewer-network</text>
+  </g>
+</svg>
+

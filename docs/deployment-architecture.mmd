@@ -1,0 +1,40 @@
+%% Deployment / infrastructure diagram
+flowchart LR
+    classDef infra fill:#f8fdf4,stroke:#66a033,color:#1c3d09,font-weight:bold;
+    classDef service fill:#f0f4ff,stroke:#4c6ef5,color:#24347c,font-weight:bold;
+    classDef runtime fill:#fff2e6,stroke:#f08c00,color:#5c2a00,font-weight:bold;
+
+    Dev["Developer workstation"]
+    Repo["Monorepo (git)"]
+    Docker["Docker Compose"]
+
+    subgraph LocalStack["Local Host"]
+        subgraph Containers["Docker Compose services"]
+            Backend["Backend API (Node.js)"]
+            WebStatic["Web assets (nginx)"]
+            Mongo["Mongo/Storage (if enabled)"]
+        end
+        subgraph Native["Native processes"]
+            ElectronApp["Electron shell"]
+            Sandbox["Code sandbox (python/node)"]
+        end
+    end
+
+    LLM["Scibox LLM API"]
+    CDN["CDN for Monaco/Assets"]
+
+    class Dev,Repo,Docker infra
+    class Backend,WebStatic,Mongo service
+    class ElectronApp,Sandbox runtime
+    class LLM,CDN infra
+
+    Dev --> Repo
+    Repo --> Docker
+    Docker --> LocalStack
+    ElectronApp --> Backend
+    WebStatic --> ElectronApp
+    Backend --> Sandbox
+    Backend --> LLM
+    WebStatic --> CDN
+    Backend --> Mongo
+

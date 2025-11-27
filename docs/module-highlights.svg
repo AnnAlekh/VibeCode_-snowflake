@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="780" viewBox="0 0 1440 780">
+  <defs>
+    <linearGradient id="mod-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f4f8ff"/>
+      <stop offset="1" stop-color="#fff6ef"/>
+    </linearGradient>
+    <style>
+      .title { font: 700 34px "Segoe UI", Arial, sans-serif; fill: #12263a; }
+      .section { font: 600 20px "Segoe UI", Arial, sans-serif; fill: #143f6d; }
+      .label { font: 600 16px "Segoe UI", Arial, sans-serif; fill: #12263a; }
+      .desc { font: 500 13px "Segoe UI", Arial, sans-serif; fill: #1f354c; }
+      .panel { rx: 18; ry: 18; stroke-width: 2; }
+      .tag { font: 600 12px "Segoe UI", Arial, sans-serif; fill: #12263a; }
+    </style>
+  </defs>
+
+  <rect width="1440" height="780" fill="url(#mod-bg)"/>
+  <text x="720" y="60" text-anchor="middle" class="title">Ключевые модули VibeCode AI Interviewer</text>
+
+  <!-- Adaptive selector -->
+  <rect x="80" y="120" width="400" height="220" class="panel" fill="#f0f7ff" stroke="#4d8ef9"/>
+  <text x="280" y="160" class="section" text-anchor="middle">Adaptive Selector</text>
+  <text x="120" y="200" class="label">`core/adaptive-selector.js`</text>
+  <text x="120" y="225" class="desc">• Анализ тренда performance (improving / stable / declining)</text>
+  <text x="120" y="245" class="desc">• Автоматическое повышение/понижение уровня задачи</text>
+  <text x="120" y="265" class="desc">• LLM-подтверждение стратегии + fallback при ошибках</text>
+
+  <!-- Code executor -->
+  <rect x="520" y="120" width="400" height="220" class="panel" fill="#f8fff4" stroke="#65c046"/>
+  <text x="720" y="160" class="section" text-anchor="middle">Code Executor</text>
+  <text x="560" y="200" class="label">`runtime/code-executor.js`</text>
+  <text x="560" y="225" class="desc">• Песочница Python/JS с валидацией небезопасных паттернов</text>
+  <text x="560" y="245" class="desc">• Измерение времени, таймауты, ограничение stdout/stderr</text>
+  <text x="560" y="265" class="desc">• Нормализация вывода и флаги blocked/timedOut</text>
+
+  <!-- Task renderer -->
+  <rect x="960" y="120" width="400" height="220" class="panel" fill="#fff4e8" stroke="#f59b3d"/>
+  <text x="1160" y="160" class="section" text-anchor="middle">Task Renderer</text>
+  <text x="1000" y="200" class="label">`web-app/js/modules/task-renderer.js`</text>
+  <text x="1000" y="225" class="desc">• Единый шаблон требований, примеров и подсказок</text>
+  <text x="1000" y="245" class="desc">• Расширенная панель тестов + статусы</text>
+  <text x="1000" y="265" class="desc">• Интеграция с Monaco/metrics для live обновлений</text>
+
+  <!-- Report manager -->
+  <rect x="220" y="380" width="400" height="260" class="panel" fill="#f6efff" stroke="#b37df5"/>
+  <text x="420" y="420" class="section" text-anchor="middle">Report Manager</text>
+  <text x="260" y="460" class="label">`web-app/js/modules/report-manager.js`</text>
+  <text x="260" y="485" class="desc">• Оркестрация API `/reports/generate`</text>
+  <text x="260" y="505" class="desc">• Сохранение истории кандидата и промежуточных оценок</text>
+  <text x="260" y="525" class="desc">• Экспорт итогов (JSON/PDF) + UI уведомления</text>
+
+  <!-- Anti-cheat -->
+  <rect x="760" y="380" width="400" height="260" class="panel" fill="#ffeef3" stroke="#f26b8d"/>
+  <text x="960" y="420" class="section" text-anchor="middle">Anti-cheat Module</text>
+  <text x="800" y="460" class="label">`web-app/js/modules/anti-cheat.js`</text>
+  <text x="800" y="485" class="desc">• Модульные слушатели событий окна/клавиатуры</text>
+  <text x="800" y="505" class="desc">• Rate-limit и классификация триггеров</text>
+  <text x="800" y="525" class="desc">• Синхронизация admin/candidate экранов</text>
+
+  <!-- Tags -->
+  <g>
+    <rect x="100" y="50" width="150" height="28" rx="14" ry="14" fill="#e0ecff"/>
+    <text x="175" y="70" class="tag" text-anchor="middle">Adaptive engine</text>
+  </g>
+  <g>
+    <rect x="270" y="50" width="160" height="28" rx="14" ry="14" fill="#e2ffe6"/>
+    <text x="350" y="70" class="tag" text-anchor="middle">Safe runtime</text>
+  </g>
+  <g>
+    <rect x="450" y="50" width="150" height="28" rx="14" ry="14" fill="#fff0db"/>
+    <text x="525" y="70" class="tag" text-anchor="middle">UX renderer</text>
+  </g>
+  <g>
+    <rect x="620" y="50" width="170" height="28" rx="14" ry="14" fill="#efe2ff"/>
+    <text x="705" y="70" class="tag" text-anchor="middle">Reporting</text>
+  </g>
+  <g>
+    <rect x="810" y="50" width="160" height="28" rx="14" ry="14" fill="#ffe0ea"/>
+    <text x="890" y="70" class="tag" text-anchor="middle">Anti-cheat</text>
+  </g>
+</svg>
+

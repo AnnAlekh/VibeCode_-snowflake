@@ -1,0 +1,43 @@
+%% Typical interview flow sequence diagram
+sequenceDiagram
+    autonumber
+    actor Candidate
+    participant ClientUI as Client UI<br/>(web/electron)
+    participant Backend as Backend API
+    participant TG as Task Generator
+    participant RTS as Runtime Sandbox
+    participant SA as Solution Analyzer
+    participant AS as Adaptive Selector
+    participant REP as Report Builder
+
+    Candidate ->> ClientUI: Выбор уровня (Junior/Middle/Senior)
+    ClientUI ->> Backend: POST /tasks/generate
+    Backend ->> TG: Request initial task
+    TG ->> Backend: Streamed task + tests
+    Backend -->> ClientUI: Rendered задача + метрики
+
+    loop Решение задачи
+        Candidate ->> ClientUI: Редактирование кода в IDE
+        ClientUI ->> Backend: POST /runtime/execute
+        Backend ->> RTS: Run code in sandbox
+        RTS -->> Backend: stdout/stderr + тесты
+        Backend -->> ClientUI: Результаты тестов/античит
+    end
+
+    ClientUI ->> Backend: POST /solutions/submit
+    Backend ->> SA: Analyze correctness/quality
+    SA ->> Backend: Scores + объяснение
+    Backend ->> AS: Update performance history
+    AS ->> Backend: Следующая сложность/тема
+    Backend ->> ClientUI: Вопросы интервьюера + новая задача
+
+    alt Повтор задачи
+        Candidate ->> ClientUI: Ответы в чате
+        ClientUI ->> Backend: Чат сообщения
+    end
+
+    Backend ->> REP: Сформировать финальный отчет
+    REP -->> Backend: PDF/JSON summary
+    Backend -->> ClientUI: Скачивание отчета
+    ClientUI -->> Candidate: Финальные рекомендации
+

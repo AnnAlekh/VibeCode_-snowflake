@@ -1,0 +1,53 @@
+%% Component diagram for VibeCode AI interviewer
+flowchart LR
+    classDef client fill:#e8f4ff,stroke:#1f77b4,color:#00325b,font-weight:bold;
+    classDef backend fill:#fdf2e9,stroke:#d35400,color:#6e2c00,font-weight:bold;
+    classDef external fill:#f4f4f4,stroke:#7f8c8d,color:#2c3e50,font-weight:bold;
+
+    subgraph Client["Client Layer (web-app / electron-app)"]
+        UI["Monaco IDE & UI shell"]
+        Chat["Chat & metrics managers"]
+        Anti["Anti-cheat & logger"]
+    end
+    class UI,Chat,Anti client
+
+    subgraph Backend["Backend `ai-interviewer`"]
+        API["REST API & session orchestrator"]
+        TG["Task generator"]
+        SA["Solution analyzer"]
+        AS["Adaptive selector"]
+        LA["Level assessor"]
+        RE["Report builder"]
+        RT["Runtime sandbox adapter"]
+        LLM["LLM client"]
+    end
+    class API,TG,SA,AS,LA,RE,RT,LLM backend
+
+    subgraph External["External services"]
+        Scibox["Scibox LLM (qwen3-32b-awq)"]
+        Sandbox["Isolated Python/Node runtime"]
+    end
+    class Scibox,Sandbox external
+
+    UI -->|HTTP/WS requests| API
+    Chat -->|Telemetry & chat events| API
+    Anti -->|Security signals| API
+
+    API --> TG
+    API --> SA
+    API --> RE
+    API --> RT
+    SA --> LA
+    LA --> AS
+    AS --> TG
+
+    TG --> LLM
+    SA --> LLM
+    RE --> LLM
+    LLM -->|OpenAI-compatible| Scibox
+
+    RT -->|Code execution| Sandbox
+    Sandbox --> RT
+
+    API -->|Results| Client
+

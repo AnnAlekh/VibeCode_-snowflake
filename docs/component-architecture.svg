@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1280" height="720" viewBox="0 0 1280 720">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6fbff"/>
+      <stop offset="1" stop-color="#fef7f1"/>
+    </linearGradient>
+    <style>
+      .title { font: 700 28px "Segoe UI", Arial, sans-serif; fill: #112233; }
+      .section { font: 600 16px "Segoe UI", Arial, sans-serif; fill: #112233; }
+      .label { font: 600 14px "Segoe UI", Arial, sans-serif; fill: #112233; }
+      .desc { font: 500 12px "Segoe UI", Arial, sans-serif; fill: #2d3a4a; }
+      .panel { rx: 18; ry: 18; stroke-width: 2; }
+      .arrow { stroke: #34495e; stroke-width: 2.2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-text { font: 500 12px "Segoe UI", Arial, sans-serif; fill: #34495e; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#34495e"/>
+    </marker>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg)"/>
+  <text x="640" y="48" text-anchor="middle" class="title">Компонентная архитектура VibeCode AI Interviewer</text>
+
+  <!-- Panels -->
+  <rect x="40" y="90" width="350" height="580" class="panel" fill="#e5f2ff" stroke="#1e5aa8"/>
+  <rect x="430" y="90" width="500" height="580" class="panel" fill="#fff3e6" stroke="#d35400"/>
+  <rect x="960" y="90" width="280" height="580" class="panel" fill="#f5f5f5" stroke="#7f8c8d"/>
+  <text x="215" y="120" class="section" text-anchor="middle">Клиент (web / electron)</text>
+  <text x="680" y="120" class="section" text-anchor="middle">Backend `ai-interviewer`</text>
+  <text x="1100" y="120" class="section" text-anchor="middle">Внешние сервисы</text>
+
+  <!-- Client modules -->
+  <g>
+    <rect x="70" y="150" width="290" height="90" rx="14" ry="14" fill="#ffffff" stroke="#9fc6ff"/>
+    <text x="215" y="185" class="label" text-anchor="middle">UI / Monaco IDE</text>
+    <text x="215" y="205" class="desc" text-anchor="middle">Экран задач, редактор, метрики</text>
+  </g>
+  <g>
+    <rect x="70" y="260" width="290" height="90" rx="14" ry="14" fill="#ffffff" stroke="#9fc6ff"/>
+    <text x="215" y="295" class="label" text-anchor="middle">Chat & Metrics</text>
+    <text x="215" y="315" class="desc" text-anchor="middle">chat-manager, metrics-manager</text>
+  </g>
+  <g>
+    <rect x="70" y="370" width="290" height="90" rx="14" ry="14" fill="#ffffff" stroke="#9fc6ff"/>
+    <text x="215" y="405" class="label" text-anchor="middle">Anti-cheat & Logger</text>
+    <text x="215" y="425" class="desc" text-anchor="middle">anti-cheat.js, logger.js</text>
+  </g>
+  <g>
+    <rect x="70" y="480" width="290" height="90" rx="14" ry="14" fill="#ffffff" stroke="#9fc6ff"/>
+    <text x="215" y="515" class="label" text-anchor="middle">API wrapper</text>
+    <text x="215" y="535" class="desc" text-anchor="middle">fetchWithTimeout, state sync</text>
+  </g>
+
+  <!-- Backend modules -->
+  <g>
+    <rect x="460" y="150" width="450" height="90" rx="14" ry="14" fill="#ffffff" stroke="#f5a572"/>
+    <text x="685" y="185" class="label" text-anchor="middle">REST API & session orchestrator</text>
+    <text x="685" y="205" class="desc" text-anchor="middle">`src/server.js`, маршрутизация REST/WS</text>
+  </g>
+  <g>
+    <rect x="460" y="260" width="210" height="90" rx="14" ry="14" fill="#ffffff" stroke="#f5a572"/>
+    <text x="565" y="295" class="label" text-anchor="middle">Task generator</text>
+    <text x="565" y="315" class="desc" text-anchor="middle">`llm/task-generator.js`</text>
+  </g>
+  <g>
+    <rect x="700" y="260" width="210" height="90" rx="14" ry="14" fill="#ffffff" stroke="#f5a572"/>
+    <text x="805" y="295" class="label" text-anchor="middle">Solution analyzer</text>
+    <text x="805" y="315" class="desc" text-anchor="middle">`llm/solution-analyzer.js`</text>
+  </g>
+  <g>
+    <rect x="460" y="370" width="210" height="90" rx="14" ry="14" fill="#ffffff" stroke="#f5a572"/>
+    <text x="565" y="405" class="label" text-anchor="middle">Level assessor</text>
+    <text x="565" y="425" class="desc" text-anchor="middle">`core/level-assessor.js`</text>
+  </g>
+  <g>
+    <rect x="700" y="370" width="210" height="90" rx="14" ry="14" fill="#ffffff" stroke="#f5a572"/>
+    <text x="805" y="405" class="label" text-anchor="middle">Adaptive selector</text>
+    <text x="805" y="425" class="desc" text-anchor="middle">`core/adaptive-selector.js`</text>
+  </g>
+  <g>
+    <rect x="460" y="480" width="210" height="90" rx="14" ry="14" fill="#ffffff" stroke="#f5a572"/>
+    <text x="565" y="515" class="label" text-anchor="middle">Runtime sandbox</text>
+    <text x="565" y="535" class="desc" text-anchor="middle">`runtime/code-executor.js`</text>
+  </g>
+  <g>
+    <rect x="700" y="480" width="210" height="90" rx="14" ry="14" fill="#ffffff" stroke="#f5a572"/>
+    <text x="805" y="515" class="label" text-anchor="middle">Report builder</text>
+    <text x="805" y="535" class="desc" text-anchor="middle">`llm/report-generator.js`</text>
+  </g>
+  <g>
+    <rect x="570" y="590" width="220" height="60" rx="14" ry="14" fill="#ffffff" stroke="#f5a572"/>
+    <text x="680" y="625" class="label" text-anchor="middle">LLM client</text>
+    <text x="680" y="645" class="desc" text-anchor="middle">OpenAI-compatible (Scibox)</text>
+  </g>
+
+  <!-- External -->
+  <g>
+    <rect x="990" y="160" width="230" height="140" rx="14" ry="14" fill="#ffffff" stroke="#b0b0b0"/>
+    <text x="1105" y="200" class="label" text-anchor="middle">Scibox API</text>
+    <text x="1105" y="220" class="desc" text-anchor="middle">qwen3-32b-awq</text>
+    <text x="1105" y="240" class="desc" text-anchor="middle">Streaming LLM ответы</text>
+  </g>
+  <g>
+    <rect x="990" y="340" width="230" height="160" rx="14" ry="14" fill="#ffffff" stroke="#b0b0b0"/>
+    <text x="1105" y="380" class="label" text-anchor="middle">Изолированный sandbox</text>
+    <text x="1105" y="400" class="desc" text-anchor="middle">python3 / node</text>
+    <text x="1105" y="420" class="desc" text-anchor="middle">ограниченное окружение</text>
+  </g>
+
+  <!-- Arrows -->
+  <path class="arrow" d="M360 195 L450 195"/>
+  <text class="arrow-text" x="405" y="180">HTTP + WS</text>
+
+  <path class="arrow" d="M360 305 L450 305"/>
+  <text class="arrow-text" x="405" y="290">чат, метрики</text>
+
+  <path class="arrow" d="M360 515 L450 515"/>
+  <text class="arrow-text" x="405" y="500">API вызовы</text>
+
+  <path class="arrow" d="M565 350 L565 360"/>
+  <text class="arrow-text" x="585" y="352">оценки</text>
+  <path class="arrow" d="M805 350 L805 360"/>
+  <text class="arrow-text" x="825" y="352">аналитика</text>
+
+  <path class="arrow" d="M575 590 L575 560 L980 260"/>
+  <text class="arrow-text" x="835" y="540">LLM промпты</text>
+
+  <path class="arrow" d="M910 525 L980 460"/>
+  <text class="arrow-text" x="925" y="470">результаты тестов</text>
+
+  <path class="arrow" d="M990 410 L900 500"/>
+  <text class="arrow-text" x="930" y="490">stdout/stderr</text>
+</svg>
+
